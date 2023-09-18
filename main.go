@@ -30,7 +30,10 @@ func main() {
 	r.Get("/health", handleHealth)
 
 	// Start the server
-	http.ListenAndServe(":3000", r)
+	err = http.ListenAndServe(":3000", r)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 //
