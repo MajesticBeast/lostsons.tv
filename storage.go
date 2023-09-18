@@ -7,6 +7,7 @@ import (
 )
 
 type Storage interface {
+	CreateClip() error
 }
 
 type PostgresStore struct {
