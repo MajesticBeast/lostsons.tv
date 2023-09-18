@@ -9,10 +9,23 @@ import (
 
 func main() {
 	r := chi.NewRouter()
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		responseWithJSON(w, http.StatusOK, map[string]string{"message": "Hello World!"})
-	})
+	r.Get("/", handleIndex)
+	r.Get("/health", handleHealth)
 	http.ListenAndServe(":3000", r)
+}
+
+//
+// Route Handlers
+//
+
+// --> /health
+func handleHealth(w http.ResponseWriter, r *http.Request) {
+	responseWithJSON(w, http.StatusOK, map[string]string{"message": "alive"})
+}
+
+// --> /
+func handleIndex(w http.ResponseWriter, r *http.Request) {
+	responseWithJSON(w, http.StatusOK, map[string]string{"message": "hello world"})
 }
 
 func responseWithJSON(w http.ResponseWriter, code int, payload interface{}) {
