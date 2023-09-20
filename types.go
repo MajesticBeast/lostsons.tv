@@ -2,15 +2,14 @@ package main
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Clip struct {
+	Id            string
 	Playback_id   string
 	Asset_id      string
 	Date_uploaded time.Time
-	User_id       uuid.UUID
-	Game_id       uuid.UUID
+	User          string
+	Game          string
 	Description   string
 }
