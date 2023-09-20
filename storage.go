@@ -10,6 +10,7 @@ import (
 
 type Storage interface {
 	CreateClip(Clip) error
+	GetClip(string) (Clip, error)
 }
 
 type PostgresStore struct {
@@ -24,6 +25,12 @@ func NewPostgresStore(dbConnStr string) (*PostgresStore, error) {
 	}
 
 	return &PostgresStore{db: db}, nil
+}
+
+func (s *PostgresStore) GetClip(id string) (Clip, error) {
+	clip := Clip{}
+
+	return clip, nil
 }
 
 func (s *PostgresStore) CreateClip(clip Clip) error {
