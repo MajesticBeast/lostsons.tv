@@ -11,6 +11,7 @@ import (
 type Storage interface {
 	CreateClip(Clip) error
 	GetClip(string) (Clip, error)
+	GetAllClips() ([]Clip, error)
 }
 
 type PostgresStore struct {
@@ -30,7 +31,43 @@ func NewPostgresStore(dbConnStr string) (*PostgresStore, error) {
 func (s *PostgresStore) GetClip(id string) (Clip, error) {
 	clip := Clip{}
 
+	query := buildGetClipQuery()
+
+	err := s.db.QueryRow(context.Background(), query, id).Scan(&clip.Id, &clip.Playback_id, &clip.Asset_id,
+		&clip.Date_uploaded, &clip.User, &clip.Game,
+		&clip.Description, &clip.Tags, &clip.Featured_users, &clip.GameName, &clip.Username,
+	)
+
+	if err != nil {
+		err = fmt.Errorf("error running GetClip: %w", err)
+		return clip, err
+	}
+
 	return clip, nil
+}
+
+func (s *PostgresStore) GetAllClips() ([]Clip, error) {
+	clips := []Clip{}
+
+	query := buildGetAllClipsQuery()
+
+	rows, err := s.db.Query(context.Background(), query)
+	if err != nil {
+		err = fmt.Errorf("error running GetAllClips: %w", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		clip := new(Clip)
+		if err := rows.Scan(&clip.Id, &clip.Playback_id, &clip.Asset_id, &clip.Date_uploaded, &clip.User, &clip.Game, &clip.Description, &clip.Tags, &clip.Featured_users, &clip.GameName, &clip.Username); err != nil {
+			err = fmt.Errorf("error scanning rows: %w", err)
+			return nil, err
+		}
+
+		clips = append(clips, *clip)
+	}
+	return clips, nil
 }
 
 func (s *PostgresStore) CreateClip(clip Clip) error {

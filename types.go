@@ -5,11 +5,15 @@ import (
 )
 
 type Clip struct {
-	Id            string
-	Playback_id   string
-	Asset_id      string
-	Date_uploaded time.Time
-	User          string
-	Game          string
-	Description   string
+	Id             string
+	Playback_id    string
+	Asset_id       string
+	Date_uploaded  time.Time
+	Description    string
+	User           string
+	Game           string
+	Tags           string
+	Featured_users string
+	GameName       string
+	Username       string
 }

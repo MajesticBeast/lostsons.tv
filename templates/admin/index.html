@@ -4,11 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ .Title }}</title>
+    <title>asdf</title>
 </head>
 
 <body>
-    {{ .Content }}
+    <h3>Add Clip</h3>
+
+    <h3>View Clips</h3>
+    {{ range $clip := . }}
+    <p>------------------</p>
+    Clip ID: {{ .Id }}<br />
+    Playback ID: {{ .Playback_id }}<br />
+    Asset ID: {{ .Asset_id }}<br />
+    Date uploaded: {{ .Date_uploaded }}<br />
+    Description: {{ .Description }}<br />
+    User ID: {{ .User }}<br />
+    Username: {{ .Username }}<br />
+    Game ID: {{ .Game }}<br />
+    Game name: {{ .GameName }}<br />
+    Tags: {{ .Tags }}<br />
+    Featured players: {{ .Featured_users }}<br />
+    {{ end }}
 </body>
 
 </html>
