@@ -15,4 +15,8 @@ There's also an online contigent of those who prefer to self-host all their data
 The name is based on the name my group of friends and myself gave ourselves and our online presence. Depending on the game being played,
 it was either our guild, clan, or team name (or rather, it's a shortened version of the original "Lost Sons of New Bedford". IYKYK).
 
+## Contributing
 
+### Clone the repo
+
+To be added when project is closer to completion...
