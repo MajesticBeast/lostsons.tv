@@ -13,8 +13,22 @@ type APIServer struct {
 	store *PostgresStore
 }
 
+type apiFunc func(http.ResponseWriter, *http.Request) error
+
+type ApiError struct {
+	Error string `json:"error"`
+}
+
 func NewAPIServer(store *PostgresStore) *APIServer {
 	return &APIServer{store: store}
+}
+
+func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := f(w, r); err != nil {
+			responseWithJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
+		}
+	}
 }
 
 func (s *APIServer) Run() {
@@ -45,20 +59,20 @@ func (s *APIServer) Run() {
 func (s *APIServer) handleHealthDB(w http.ResponseWriter, r *http.Request) {
 	err := s.store.db.Ping(r.Context())
 	if err != nil {
-		s.responseWithError(w, http.StatusInternalServerError, "dead")
+		responseWithError(w, http.StatusInternalServerError, "dead")
 	}
 
-	s.responseWithJSON(w, http.StatusOK, map[string]string{"db": "alive"})
+	responseWithJSON(w, http.StatusOK, map[string]string{"db": "alive"})
 }
 
 // --> healthHTTP
 func (s *APIServer) handleHealthHTTP(w http.ResponseWriter, r *http.Request) {
-	s.responseWithJSON(w, http.StatusOK, map[string]string{"http": "alive"})
+	responseWithJSON(w, http.StatusOK, map[string]string{"http": "alive"})
 }
 
 // --> index
 func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) {
-	s.responseWithJSON(w, http.StatusOK, map[string]string{"message": "hello world"})
+	responseWithJSON(w, http.StatusOK, map[string]string{"message": "hello world"})
 }
 
 // --> mux-webhook
@@ -67,10 +81,10 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 // json responses
-func (s *APIServer) responseWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+func responseWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, err := json.Marshal(payload)
 	if err != nil {
-		s.responseWithError(w, http.StatusInternalServerError, err.Error())
+		responseWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -80,6 +94,6 @@ func (s *APIServer) responseWithJSON(w http.ResponseWriter, code int, payload in
 	w.Write(response)
 }
 
-func (s *APIServer) responseWithError(w http.ResponseWriter, code int, message string) {
-	s.responseWithJSON(w, code, map[string]string{"error": message})
+func responseWithError(w http.ResponseWriter, code int, message string) {
+	responseWithJSON(w, code, map[string]string{"error": message})
 }

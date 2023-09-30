@@ -17,7 +17,7 @@ import (
 
 func (s *APIServer) clipsRouter() chi.Router {
 	r := chi.NewRouter()
-	r.Get("/", s.handleAdminIndex)
+	r.Get("/new", makeHTTPHandleFunc(s.handleCreateClip))
 
 	return r
 }
@@ -92,7 +92,7 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	s.responseWithJSON(w, http.StatusOK, "success")
+	responseWithJSON(w, http.StatusOK, "success")
 
 	return nil
 }
