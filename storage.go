@@ -33,9 +33,9 @@ func (s *PostgresStore) GetClip(id string) (Clip, error) {
 
 	query := buildGetClipQuery()
 
-	err := s.db.QueryRow(context.Background(), query, id).Scan(&clip.Id, &clip.Playback_id, &clip.Asset_id,
-		&clip.Date_uploaded, &clip.User, &clip.Game,
-		&clip.Description, &clip.Tags, &clip.Featured_users, &clip.GameName, &clip.Username,
+	err := s.db.QueryRow(context.Background(), query, id).Scan(&clip.ID, &clip.PlaybackID, &clip.AssetID,
+		&clip.DateUploaded, &clip.UserID, &clip.GameID,
+		&clip.Description, &clip.Tags, &clip.FeaturedUsers, &clip.Game, &clip.Username,
 	)
 
 	if err != nil {
@@ -60,7 +60,7 @@ func (s *PostgresStore) GetAllClips() ([]Clip, error) {
 
 	for rows.Next() {
 		clip := new(Clip)
-		if err := rows.Scan(&clip.Id, &clip.Playback_id, &clip.Asset_id, &clip.Date_uploaded, &clip.User, &clip.Game, &clip.Description, &clip.Tags, &clip.Featured_users, &clip.GameName, &clip.Username); err != nil {
+		if err := rows.Scan(&clip.ID, &clip.PlaybackID, &clip.AssetID, &clip.DateUploaded, &clip.UserID, &clip.GameID, &clip.Description, &clip.Tags, &clip.FeaturedUsers, &clip.Game, &clip.Username); err != nil {
 			err = fmt.Errorf("error scanning rows: %w", err)
 			return nil, err
 		}
@@ -75,38 +75,34 @@ func (s *PostgresStore) CreateClip(clip Clip) error {
 	//
 	// SECTION: Clip insertion
 	//
-	// Check if user exists
-	selectUserQuery := `SELECT id FROM users WHERE users.username = $1`
-	var user_id string
-	err := s.db.QueryRow(context.Background(), selectUserQuery, clip.User).Scan(&user_id)
+	// Check if user exists -> user_id
+	user_id, err := s.getIDFromString(clip.Username, "users", "username")
 	if err != nil {
 		err = fmt.Errorf("error selecting user: %w", err)
 		return err
 	}
 
-	// User exists at this point, check if game exists
-	selectGameQuery := `SELECT id FROM games WHERE games.name = $1`
-	var game_id string
-	err = s.db.QueryRow(context.Background(), selectGameQuery, clip.Game).Scan(&game_id)
+	// Check if game exists -> game_id
+	game_id, err := s.getIDFromString(clip.Game, "games", "name")
 	if err != nil {
 		err = fmt.Errorf("error selecting game: %w", err)
 		return err
 	}
 
 	// Game and user exists, complete the clip object and insert the clip
-	clip.Id = uuid.New().String()
-	clip.User = user_id
-	clip.Game = game_id
+	clip.ID = uuid.New().String()
+	clip.UserID = user_id
+	clip.GameID = game_id
 	insertClipQuery := `INSERT INTO clips (id, playback_id, asset_id, date_uploaded, description, user_id, game_id) VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
 	_, err = s.db.Exec(context.Background(), insertClipQuery,
-		clip.Id,
-		clip.Playback_id,
-		clip.Asset_id,
-		clip.Date_uploaded,
+		clip.ID,
+		clip.PlaybackID,
+		clip.AssetID,
+		clip.DateUploaded,
 		clip.Description,
-		clip.User,
-		clip.Game,
+		clip.UserID,
+		clip.GameID,
 	)
 
 	if err != nil {
@@ -118,10 +114,10 @@ func (s *PostgresStore) CreateClip(clip Clip) error {
 	// SECTION: Tags insertion
 	//
 	// Insert the tags into the tags table. If the tag already exists, do nothing.
-	tagId := uuid.New().String()
+	tagID := uuid.New().String()
 
 	insertTagsQuery := `INSERT INTO tags (id, tag_name) VALUES ($1, $2) ON CONFLICT (tag_name) DO UPDATE SET tag_name = EXCLUDED.tag_name RETURNING id`
-	err = s.db.QueryRow(context.Background(), insertTagsQuery, tagId, "creepin").Scan(&tagId)
+	err = s.db.QueryRow(context.Background(), insertTagsQuery, tagID, "creepin").Scan(&tagID)
 
 	if err != nil {
 		err = fmt.Errorf("error inserting tags: %w", err)
@@ -131,8 +127,8 @@ func (s *PostgresStore) CreateClip(clip Clip) error {
 	// Insert the clip_id and tag_id into the clips_tags table
 	insertClipsTagsQuery := `INSERT INTO clips_tags (clip_id, tag_id) VALUES ($1, $2)`
 	_, err = s.db.Exec(context.Background(), insertClipsTagsQuery,
-		clip.Id,
-		tagId,
+		clip.ID,
+		tagID,
 	)
 
 	if err != nil {
@@ -146,8 +142,8 @@ func (s *PostgresStore) CreateClip(clip Clip) error {
 	// Insert the clip_id and user_id into the clips_users table
 	insertClipsUsersQuery := `INSERT INTO clips_users (clip_id, user_id) VALUES ($1, $2)`
 	_, err = s.db.Exec(context.Background(), insertClipsUsersQuery,
-		clip.Id,
-		clip.User,
+		clip.ID,
+		clip.UserID,
 	)
 
 	if err != nil {
@@ -156,6 +152,20 @@ func (s *PostgresStore) CreateClip(clip Clip) error {
 	}
 
 	return nil
+}
+
+func (s *PostgresStore) getIDFromString(id string, table string, column string) (string, error) {
+
+	query := `SELECT id FROM $1 WHERE $1.$2 = $3`
+
+	var uuid string
+	err := s.db.QueryRow(context.Background(), query, table, column, id).Scan(&uuid)
+	if err != nil {
+		err = fmt.Errorf("error selecting %s: %s", id, err)
+		return "", err
+	}
+
+	return uuid, nil
 }
 
 func (s *PostgresStore) Init() error {

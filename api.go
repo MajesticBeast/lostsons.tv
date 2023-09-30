@@ -21,10 +21,12 @@ func (s *APIServer) Run() {
 	// Initialize main router and routes
 	r := chi.NewRouter()
 	r.Get("/", s.handleIndex)
-	r.Get("/health", s.handleHealth)
+	r.Get("/healthDb", s.handleHealthDb)
+	r.Get("/healthHttp", s.handleHealthHTTP)
 
 	// Mount subrouters router
 	r.Mount("/admin", s.adminRouter())
+	r.Mount("/clips", s.clipsRouter())
 
 	// Start server
 	log.Fatal(http.ListenAndServe(":3000", r))
@@ -34,16 +36,27 @@ func (s *APIServer) Run() {
 // Route Handlers
 //
 
-// --> /health
-func (s *APIServer) handleHealth(w http.ResponseWriter, r *http.Request) {
-	s.responseWithJSON(w, http.StatusOK, map[string]string{"message": "alive"})
+// --> healthDb
+func (s *APIServer) handleHealthDb(w http.ResponseWriter, r *http.Request) {
+	err := s.store.db.Ping(r.Context())
+	if err != nil {
+		s.responseWithError(w, http.StatusInternalServerError, "dead")
+	}
+
+	s.responseWithJSON(w, http.StatusOK, map[string]string{"db": "alive"})
 }
 
-// --> /index
+// --> healthHTTP
+func (s *APIServer) handleHealthHTTP(w http.ResponseWriter, r *http.Request) {
+	s.responseWithJSON(w, http.StatusOK, map[string]string{"http": "alive"})
+}
+
+// --> index
 func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) {
 	s.responseWithJSON(w, http.StatusOK, map[string]string{"message": "hello world"})
 }
 
+// json responses
 func (s *APIServer) responseWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, err := json.Marshal(payload)
 	if err != nil {
@@ -52,6 +65,7 @@ func (s *APIServer) responseWithJSON(w http.ResponseWriter, code int, payload in
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(code)
 	w.Write(response)
 }

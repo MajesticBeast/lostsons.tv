@@ -13,17 +13,17 @@
     <h3>View Clips</h3>
     {{ range $clip := . }}
     <p>------------------</p>
-    Clip ID: {{ .Id }}<br />
-    Playback ID: {{ .Playback_id }}<br />
-    Asset ID: {{ .Asset_id }}<br />
-    Date uploaded: {{ .Date_uploaded }}<br />
+    Clip ID: {{ .ID }}<br />
+    Playback ID: {{ .PlaybackID }}<br />
+    Asset ID: {{ .AssetID }}<br />
+    Date uploaded: {{ .DateUploaded }}<br />
     Description: {{ .Description }}<br />
-    User ID: {{ .User }}<br />
-    Username: {{ .Username }}<br />
+    User ID: {{ .UserID }}<br />
+    Uploader: {{ .Username }}<br />
     Game ID: {{ .Game }}<br />
-    Game name: {{ .GameName }}<br />
+    Game name: {{ .GameID }}<br />
     Tags: {{ .Tags }}<br />
-    Featured players: {{ .Featured_users }}<br />
+    Featured players: {{ .FeaturedUsers }}<br />
     {{ end }}
 </body>
 
