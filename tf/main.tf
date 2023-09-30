@@ -25,4 +25,3 @@ resource "digitalocean_spaces_bucket" "bucket" {
     }
   }
 }
-
