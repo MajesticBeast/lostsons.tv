@@ -9,22 +9,37 @@
 
 <body>
     <h3>Add Clip</h3>
+    <!-- Create HTML form to upload a clip -->
+    <form action="/clips/new" method="post" enctype="multipart/form-data">
+        <label for="clip">Clip:</label>
+        <input type="file" name="clip" id="clip"><br />
+        <label for="description">Description:</label>
+        <input type="text" name="description" id="description"><br />
+        <label for="game">Game:</label>
+        <input type="text" name="game" id="game"><br />
+        <label for="tags">Tags:</label>
+        <input type="text" name="tags" id="tags"><br />
+        <label for="featured_users">Featured Users:</label>
+        <input type="text" name="featured_users" id="featured_users"><br />
+        <label for="username">User ID:</label>
+        <input type="text" name="username" id="username"><br />
+        <input type="submit" value="Submit">
 
-    <h3>View Clips</h3>
-    {{ range $clip := . }}
-    <p>------------------</p>
-    Clip ID: {{ .ID }}<br />
-    Playback ID: {{ .PlaybackID }}<br />
-    Asset ID: {{ .AssetID }}<br />
-    Date uploaded: {{ .DateUploaded }}<br />
-    Description: {{ .Description }}<br />
-    User ID: {{ .UserID }}<br />
-    Uploader: {{ .Username }}<br />
-    Game ID: {{ .Game }}<br />
-    Game name: {{ .GameID }}<br />
-    Tags: {{ .Tags }}<br />
-    Featured players: {{ .FeaturedUsers }}<br />
-    {{ end }}
+        <h3>View Clips</h3>
+        {{ range $clip := . }}
+        <p>------------------</p>
+        Clip ID: {{ .ID }}<br />
+        Playback ID: {{ .PlaybackID }}<br />
+        Asset ID: {{ .AssetID }}<br />
+        Date uploaded: {{ .DateUploaded }}<br />
+        Description: {{ .Description }}<br />
+        User ID: {{ .UserID }}<br />
+        Uploader: {{ .Username }}<br />
+        Game ID: {{ .Game }}<br />
+        Game name: {{ .GameID }}<br />
+        Tags: {{ .Tags }}<br />
+        Featured players: {{ .FeaturedUsers }}<br />
+        {{ end }}
 </body>
 
 </html>

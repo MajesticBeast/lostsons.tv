@@ -154,14 +154,13 @@ func (s *PostgresStore) CreateClip(clip Clip) error {
 	return nil
 }
 
-func (s *PostgresStore) getIDFromString(id string, table string, column string) (string, error) {
-
-	query := `SELECT id FROM $1 WHERE $1.$2 = $3`
+func (s *PostgresStore) getIDFromString(name string, table string, column string) (string, error) {
+	query := fmt.Sprintf("SELECT id FROM %s WHERE %s = $1", table, column)
 
 	var uuid string
-	err := s.db.QueryRow(context.Background(), query, table, column, id).Scan(&uuid)
+	err := s.db.QueryRow(context.Background(), query, name).Scan(&uuid)
 	if err != nil {
-		err = fmt.Errorf("error selecting %s: %s", id, err)
+		err = fmt.Errorf("error selecting %s: %s", name, err)
 		return "", err
 	}
 

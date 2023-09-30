@@ -17,7 +17,7 @@ import (
 
 func (s *APIServer) clipsRouter() chi.Router {
 	r := chi.NewRouter()
-	r.Get("/new", makeHTTPHandleFunc(s.handleCreateClip))
+	r.Post("/new", makeHTTPHandleFunc(s.handleCreateClip))
 
 	return r
 }
@@ -100,7 +100,9 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 // Create a function to set up a new digital ocean session
 func NewDigitalOceanSession() (*session.Session, error) {
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("sfo3"),
+		Region:           aws.String("us-east-1"),
+		Endpoint:         aws.String("https://sfo3.digitaloceanspaces.com"),
+		S3ForcePathStyle: aws.Bool(false),
 		Credentials: credentials.NewStaticCredentials(
 			os.Getenv("DO_SPACES_KEY"),
 			os.Getenv("DO_SPACES_SECRET"),
@@ -127,6 +129,7 @@ func UploadFileToSpaces(svc *s3.S3, file multipart.File, handler *multipart.File
 		Bucket: aws.String("lostsonstv"),
 		Key:    aws.String(handler.Filename),
 		Body:   file,
+		ACL:    aws.String("public-read"),
 	})
 	if err != nil {
 		err = fmt.Errorf("error uploading file to spaces: %w", err)
