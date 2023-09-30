@@ -17,7 +17,7 @@ func (s *APIServer) adminRouter() chi.Router {
 
 // Admin Handlers
 //
-// --> /admin/index
+// --> /index
 func (s *APIServer) handleAdminIndex(w http.ResponseWriter, r *http.Request) {
 	clips, err := s.store.GetAllClips()
 	if err != nil {

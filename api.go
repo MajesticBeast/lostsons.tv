@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -21,14 +22,15 @@ func (s *APIServer) Run() {
 	// Initialize main router and routes
 	r := chi.NewRouter()
 	r.Get("/", s.handleIndex)
-	r.Get("/healthDb", s.handleHealthDb)
-	r.Get("/healthHttp", s.handleHealthHTTP)
+	r.Get("/healthDB", s.handleHealthDB)
+	r.Get("/healthHTTP", s.handleHealthHTTP)
 
 	// Mount subrouters router
 	r.Mount("/admin", s.adminRouter())
 	r.Mount("/clips", s.clipsRouter())
 
 	// Start server
+	fmt.Println("Starting server on port 3000")
 	log.Fatal(http.ListenAndServe(":3000", r))
 }
 
@@ -37,7 +39,7 @@ func (s *APIServer) Run() {
 //
 
 // --> healthDb
-func (s *APIServer) handleHealthDb(w http.ResponseWriter, r *http.Request) {
+func (s *APIServer) handleHealthDB(w http.ResponseWriter, r *http.Request) {
 	err := s.store.db.Ping(r.Context())
 	if err != nil {
 		s.responseWithError(w, http.StatusInternalServerError, "dead")
