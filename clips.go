@@ -74,14 +74,10 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	// Get playback ID and asset ID
-	playbackID := asset.Data.PlaybackIds[0].Id
-	assetID := asset.Data.Id
-
 	// Create a new clip object
 	clip := Clip{
-		PlaybackID:    playbackID,
-		AssetID:       assetID,
+		PlaybackID:    asset.Data.PlaybackIds[0].Id,
+		AssetID:       asset.Data.Id,
 		Description:   newForm.Description,
 		Game:          newForm.Game,
 		Username:      newForm.Username,
@@ -91,30 +87,14 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 
 	// Add clip to database
 	err = s.store.CreateClip(clip)
-
-	return nil
-}
-
-// Convert a mux asset to a clip
-func AssetToClip(asset mux.AssetResponse) Clip {
-	clip := Clip{
-		PlaybackID:   asset.Data.PlaybackIds[0].Id,
-		AssetID:      asset.Data.Id,
-		DateUploaded: asset.Data.CreatedAt,
-		UserID:       asset.Data.CreatedBy,
-		GameID:       asset.Data.Metadata["game_id"],
-		Description:  asset.Data.Metadata["description"],
-		Tags:         asset.Data.Metadata["tags"],
-		FeaturedUsers: []string{
-			asset.Data.Metadata["featured_user_1"],
-			asset.Data.Metadata["featured_user_2"],
-			asset.Data.Metadata["featured_user_3"],
-		},
-		Game:     asset.Data.Metadata["game"],
-		Username: asset.Data.Metadata["username"],
+	if err != nil {
+		err = fmt.Errorf("error creating clip: %w", err)
+		return err
 	}
 
-	return clip
+	s.responseWithJSON(w, http.StatusOK, "success")
+
+	return nil
 }
 
 // Create a function to set up a new digital ocean session
