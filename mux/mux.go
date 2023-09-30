@@ -1,10 +1,23 @@
 package mux
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
 	"os"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
 	muxgo "github.com/muxinc/mux-go"
 )
+
+// Load environment variables
+func init() {
+	godotenv.Load()
+}
 
 // Create a new Mux client
 func NewMuxClient() *muxgo.APIClient {
@@ -16,7 +29,7 @@ func NewMuxClient() *muxgo.APIClient {
 	return client
 }
 
-// CreateAsset creates a new Mux asset request
+// Create a Mux asset
 func CreateAsset(client *muxgo.APIClient, filename string) (muxgo.AssetResponse, error) {
 	asset, err := client.AssetsApi.CreateAsset(muxgo.CreateAssetRequest{
 		Input: []muxgo.InputSettings{
@@ -31,4 +44,53 @@ func CreateAsset(client *muxgo.APIClient, filename string) (muxgo.AssetResponse,
 	}
 
 	return asset, nil
+}
+
+// func CreateAsset(client *muxgo.APIClient, url string) (muxgo.AssetResponse, error) {
+// 	asset, err := client.AssetsApi.CreateAsset(muxgo.CreateAssetRequest{
+// 		Input: []muxgo.InputSettings{
+// 			muxgo.InputSettings{
+// 				Url: url,
+// 			},
+// 		},
+// 		PlaybackPolicy: []muxgo.PlaybackPolicy{
+// 			"public",
+// 		},
+// 		Mp4Support: "standard",
+// 	})
+
+// 	return asset, err
+// }
+
+func ReceiveVideoStatus(w http.ResponseWriter, r *http.Request) {
+
+	// Get the hook data
+	jsonResult, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var hook VideoAsset
+	json.Unmarshal([]byte(jsonResult), &hook)
+
+	log.Printf("Incoming webhook from: %s\n", r.RemoteAddr)
+
+	if hook.Type == "video.asset.ready" {
+		log.Println(hook.Type)
+		log.Println("Upload ID: ", hook.Data.UploadID)
+
+		dbString := os.Getenv("DB_CONN_STR")
+
+		conn, err := pgx.Connect(context.Background(), dbString)
+		if err != nil {
+			fmt.Println("unable to connecto to db: ", err)
+		}
+
+		defer conn.Close(context.Background())
+
+		_, err = conn.Exec(context.Background(), "update clips SET playback_id = $1 WHERE unique_id = $2", hook.Data.PlaybackIds[0].ID, hook.Data.UploadID)
+		if err != nil {
+			fmt.Println("unable to update db: ", err)
+		}
+	}
 }

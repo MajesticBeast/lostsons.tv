@@ -25,6 +25,9 @@ func (s *APIServer) Run() {
 	r.Get("/healthDB", s.handleHealthDB)
 	r.Get("/healthHTTP", s.handleHealthHTTP)
 
+	// Mux webhook route
+	r.Post("/mux-webhook", s.handleMuxWebhook)
+
 	// Mount subrouters router
 	r.Mount("/admin", s.adminRouter())
 	r.Mount("/clips", s.clipsRouter())
@@ -56,6 +59,11 @@ func (s *APIServer) handleHealthHTTP(w http.ResponseWriter, r *http.Request) {
 // --> index
 func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) {
 	s.responseWithJSON(w, http.StatusOK, map[string]string{"message": "hello world"})
+}
+
+// --> mux-webhook
+func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
+
 }
 
 // json responses

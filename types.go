@@ -22,6 +22,6 @@ type NewClipForm struct {
 	Username      string
 	Description   string
 	Game          string
-	Tags          []string
-	FeaturedUsers []string
+	Tags          string
+	FeaturedUsers string
 }

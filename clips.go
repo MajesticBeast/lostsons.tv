@@ -2,9 +2,16 @@ package main
 
 import (
 	"fmt"
+	"mime/multipart"
 	"net/http"
-	"strings"
+	"os"
 
+	"github.com/majesticbeast/lostsons.tv/mux"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -15,9 +22,7 @@ func (s *APIServer) clipsRouter() chi.Router {
 	return r
 }
 
-// Admin Handlers
-//
-// --> /admin/index
+// Route for submitting a clip
 func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) error {
 
 	newForm := new(NewClipForm)
@@ -25,10 +30,128 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 		err = fmt.Errorf("error parsing multipart form: %w", err)
 		return err
 	}
+
 	newForm.Description = r.FormValue("description")
 	newForm.Game = r.FormValue("game")
 	newForm.Username = r.FormValue("username")
-	newForm.Tags = strings.Split(r.FormValue("tags"), " ")
+	newForm.Tags = r.FormValue("tags")
+	newForm.FeaturedUsers = r.FormValue("featured_users")
+
+	// Get file from form
+	file, handler, err := r.FormFile("clip")
+	if err != nil {
+		err = fmt.Errorf("error getting file from form: %w", err)
+		return err
+	}
+	defer file.Close()
+
+	// Upload file to DigitalOcean Spaces
+	sess, err := NewDigitalOceanSession()
+	if err != nil {
+		err = fmt.Errorf("error creating new digital ocean session: %w", err)
+		return err
+	}
+
+	svc, err := NewS3Client(sess)
+	if err != nil {
+		err = fmt.Errorf("error creating new s3 client: %w", err)
+		return err
+	}
+
+	err = UploadFileToSpaces(svc, file, handler)
+	if err != nil {
+		err = fmt.Errorf("error uploading file to spaces: %w", err)
+		return err
+	}
+
+	// Create a new Mux client
+	client := mux.NewMuxClient()
+
+	// Create a Mux asset
+	asset, err := mux.CreateAsset(client, handler.Filename)
+	if err != nil {
+		err = fmt.Errorf("error creating mux asset: %w", err)
+		return err
+	}
+
+	// Get playback ID and asset ID
+	playbackID := asset.Data.PlaybackIds[0].Id
+	assetID := asset.Data.Id
+
+	// Create a new clip object
+	clip := Clip{
+		PlaybackID:    playbackID,
+		AssetID:       assetID,
+		Description:   newForm.Description,
+		Game:          newForm.Game,
+		Username:      newForm.Username,
+		Tags:          newForm.Tags,
+		FeaturedUsers: newForm.FeaturedUsers,
+	}
+
+	// Add clip to database
+	err = s.store.CreateClip(clip)
+
+	return nil
+}
+
+// Convert a mux asset to a clip
+func AssetToClip(asset mux.AssetResponse) Clip {
+	clip := Clip{
+		PlaybackID:   asset.Data.PlaybackIds[0].Id,
+		AssetID:      asset.Data.Id,
+		DateUploaded: asset.Data.CreatedAt,
+		UserID:       asset.Data.CreatedBy,
+		GameID:       asset.Data.Metadata["game_id"],
+		Description:  asset.Data.Metadata["description"],
+		Tags:         asset.Data.Metadata["tags"],
+		FeaturedUsers: []string{
+			asset.Data.Metadata["featured_user_1"],
+			asset.Data.Metadata["featured_user_2"],
+			asset.Data.Metadata["featured_user_3"],
+		},
+		Game:     asset.Data.Metadata["game"],
+		Username: asset.Data.Metadata["username"],
+	}
+
+	return clip
+}
+
+// Create a function to set up a new digital ocean session
+func NewDigitalOceanSession() (*session.Session, error) {
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String("sfo3"),
+		Credentials: credentials.NewStaticCredentials(
+			os.Getenv("DO_SPACES_KEY"),
+			os.Getenv("DO_SPACES_SECRET"),
+			"",
+		),
+	})
+	if err != nil {
+		err = fmt.Errorf("error creating new digital ocean session: %w", err)
+		return nil, err
+	}
+
+	return sess, nil
+}
+
+// Create a new s3 client
+func NewS3Client(sess *session.Session) (*s3.S3, error) {
+	svc := s3.New(sess)
+	return svc, nil
+}
+
+// Upload file to DigitalOcean Spaces
+func UploadFileToSpaces(svc *s3.S3, file multipart.File, handler *multipart.FileHeader) error {
+	_, err := svc.PutObject(&s3.PutObjectInput{
+		Bucket: aws.String("lostsonstv"),
+		Key:    aws.String(handler.Filename),
+		Body:   file,
+	})
+	if err != nil {
+		err = fmt.Errorf("error uploading file to spaces: %w", err)
+		return err
+	}
 
 	return nil
 }
