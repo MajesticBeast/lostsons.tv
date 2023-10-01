@@ -82,7 +82,7 @@ func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Handling mux webhook")
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		err = fmt.Errorf("error reading mux webhook response body: %w", err)
@@ -90,13 +90,13 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// err = IsValidMuxSignature(r, body)
-	// if err != nil {
-	// 	fmt.Println("error validating mux signature")
-	// 	err = fmt.Errorf("error validating mux signature: %w", err)
-	// 	responseWithError(w, http.StatusBadRequest, err.Error())
-	// 	return
-	// }
+	err = IsValidMuxSignature(r, body)
+	if err != nil {
+		fmt.Println("error validating mux signature")
+		err = fmt.Errorf("error validating mux signature: %w", err)
+		responseWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	// buf := new(bytes.Buffer)
 	// _, err = buf.ReadFrom(bytes.NewReader(body))
@@ -106,8 +106,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 	// 	responseWithError(w, http.StatusBadRequest, err.Error())
 	// 	return
 	// }
-	fmt.Println("right before unmarshal")
-	fmt.Println("body:", string(body))
+
 	assetResponse := mux.WebhookResponse{}
 	if err := json.Unmarshal(body, &assetResponse); err != nil {
 		fmt.Println("error unmarshalling mux webhook response body")
@@ -131,7 +130,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 func PostToDiscordWebhook(assetResponse mux.WebhookResponse) error {
 	fmt.Println("Posting to discord webhook")
 	username := "lostsons.tv"
-	content := fmt.Sprintf("New clip { %s }\nAssetID: %s", assetResponse.Type, assetResponse.Data.PlaybackIds[0].ID)
+	content := fmt.Sprintf("New clip { %s }\nPlaybackID: %s", assetResponse.Type, assetResponse.Data.PlaybackIds[0].ID)
 	url := os.Getenv("DISCORD_WEBHOOK_URL")
 	message := discordwebhook.Message{
 		Username: &username,
