@@ -19,7 +19,7 @@ jobs:
             - name: Update SHA
               run: echo $GITHUB_SHA > $GITHUB_WORKSPACE/site/_meta
 
-            - name: Build docker iamge
+            - name: Build docker image
               run: docker build -t ${{ secrets.DO_REGISTRY_ENDPOINT }}/lostsonstv:$(echo $GITHUB_SHA | head -c7) .
 
             - name: Install doctl
@@ -32,13 +32,6 @@ jobs:
               
             - name: Push image to DigitalOcean Container Registry
               run: docker push ${{ secrets.DO_REGISTRY_ENDPOINT }}/lostsonstv:$(echo $GITHUB_SHA | head -c7)
-
             
             - name: Update deployment file
               run: TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ secrets.DO_REGISTRY_ENDPOINT }}/lostsonstv:'${TAG}'|' $GITHUB_WORKSPACE/config/deployment.yml
-
-            - name: Build docker image
-              uses: docker/build-push-action@v5
-              with:
-                push: true
-            
