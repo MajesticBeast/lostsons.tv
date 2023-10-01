@@ -131,7 +131,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 func PostToDiscordWebhook(assetResponse mux.WebhookResponse) error {
 	fmt.Println("Posting to discord webhook")
 	username := "lostsons.tv"
-	content := fmt.Sprintf("New clip { %s }\nAssetID: %s", assetResponse.Type, assetResponse.Data.Tracks[0].ID)
+	content := fmt.Sprintf("New clip { %s }\nAssetID: %s", assetResponse.Type, assetResponse.Data.PlaybackIds[0].ID)
 	url := os.Getenv("DISCORD_WEBHOOK_URL")
 	message := discordwebhook.Message{
 		Username: &username,

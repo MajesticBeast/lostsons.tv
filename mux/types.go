@@ -76,8 +76,9 @@ type VideoAsset struct {
 }
 
 type WebhookResponse struct {
-	Type   string `json:"type"`
-	Object struct {
+	Type      string `json:"type"`
+	RequestID any    `json:"request_id"`
+	Object    struct {
 		Type string `json:"type"`
 		ID   string `json:"id"`
 	} `json:"object"`
@@ -87,26 +88,20 @@ type WebhookResponse struct {
 		ID   string `json:"id"`
 	} `json:"environment"`
 	Data struct {
-		Tracks []struct {
-			Type             string  `json:"type"`
-			MaxWidth         int     `json:"max_width,omitempty"`
-			MaxHeight        int     `json:"max_height,omitempty"`
-			MaxFrameRate     float64 `json:"max_frame_rate,omitempty"`
-			ID               string  `json:"id"`
-			Duration         float64 `json:"duration"`
-			MaxChannels      int     `json:"max_channels,omitempty"`
-			MaxChannelLayout string  `json:"max_channel_layout,omitempty"`
-		} `json:"tracks"`
-		Status              string    `json:"status"`
-		MaxStoredResolution string    `json:"max_stored_resolution"`
-		MaxStoredFrameRate  float64   `json:"max_stored_frame_rate"`
-		ID                  string    `json:"id"`
-		Duration            float64   `json:"duration"`
-		CreatedAt           time.Time `json:"created_at"`
-		AspectRatio         string    `json:"aspect_ratio"`
+		Status      string `json:"status"`
+		PlaybackIds []struct {
+			Policy string `json:"policy"`
+			ID     string `json:"id"`
+		} `json:"playback_ids"`
+		Mp4Support        string `json:"mp4_support"`
+		MaxResolutionTier string `json:"max_resolution_tier"`
+		MasterAccess      string `json:"master_access"`
+		ID                string `json:"id"`
+		EncodingTier      string `json:"encoding_tier"`
+		CreatedAt         int    `json:"created_at"`
 	} `json:"data"`
 	CreatedAt      time.Time `json:"created_at"`
+	Attempts       []any     `json:"attempts"`
 	AccessorSource any       `json:"accessor_source"`
 	Accessor       any       `json:"accessor"`
-	RequestID      any       `json:"request_id"`
 }
