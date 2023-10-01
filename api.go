@@ -101,6 +101,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 	err = json.NewDecoder(r.Body).Decode(&assetResponse)
 
 	if err != nil {
+		fmt.Println("error decoding mux webhook response", err)
 		err = fmt.Errorf("error decoding mux webhook response: %w", err)
 		responseWithError(w, http.StatusBadRequest, err.Error())
 		return
