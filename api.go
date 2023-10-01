@@ -1,12 +1,21 @@
 package main
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/gtuk/discordwebhook"
+	"github.com/majesticbeast/lostsons.tv/mux"
 )
 
 type APIServer struct {
@@ -55,7 +64,6 @@ func (s *APIServer) Run() {
 // Route Handlers
 //
 
-// --> healthDb
 func (s *APIServer) handleHealthDB(w http.ResponseWriter, r *http.Request) {
 	err := s.store.db.Ping(r.Context())
 	if err != nil {
@@ -65,19 +73,108 @@ func (s *APIServer) handleHealthDB(w http.ResponseWriter, r *http.Request) {
 	responseWithJSON(w, http.StatusOK, map[string]string{"db": "alive"})
 }
 
-// --> healthHTTP
 func (s *APIServer) handleHealthHTTP(w http.ResponseWriter, r *http.Request) {
 	responseWithJSON(w, http.StatusOK, map[string]string{"http": "alive"})
 }
 
-// --> index
 func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) {
 	responseWithJSON(w, http.StatusOK, map[string]string{"message": "hello world"})
 }
 
-// --> mux-webhook
 func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Handling mux webhook")
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		err = fmt.Errorf("error reading mux webhook response body: %w", err)
+		responseWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
+	err = IsValidMuxSignature(r, body)
+	if err != nil {
+		err = fmt.Errorf("error validating mux signature: %w", err)
+		responseWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	assetResponse := mux.VideoAsset{}
+	err = json.NewDecoder(r.Body).Decode(&assetResponse)
+
+	if err != nil {
+		err = fmt.Errorf("error decoding mux webhook response: %w", err)
+		responseWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Post to discord webhook URL
+	err = PostToDiscordWebhook(assetResponse)
+	if err != nil {
+		err = fmt.Errorf("error posting to discord webhook: %w", err)
+		responseWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+}
+
+func PostToDiscordWebhook(assetResponse mux.VideoAsset) error {
+	fmt.Println("Posting to discord webhook")
+	username := "lostsons.tv"
+	content := fmt.Sprintf("New clip { %s }\nPlaybackID: %s", assetResponse.Type, assetResponse.Data.PlaybackIds[0].ID)
+	url := os.Getenv("DISCORD_WEBHOOK_URL")
+	message := discordwebhook.Message{
+		Username: &username,
+		Content:  &content,
+	}
+
+	err := discordwebhook.SendMessage(url, message)
+	if err != nil {
+		err = fmt.Errorf("error sending message to discord webhook: %w", err)
+		return err
+	}
+
+	return nil
+}
+
+func generateHmacSignature(webhookSecret, payload string) string {
+	h := hmac.New(sha256.New, []byte(webhookSecret))
+	h.Write([]byte(payload))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func IsValidMuxSignature(r *http.Request, body []byte) error {
+	muxSignature := r.Header.Get("Mux-Signature")
+
+	if muxSignature == "" {
+		return errors.New("no Mux-Signature in request header")
+	}
+
+	muxSignatureArr := strings.Split(muxSignature, ",")
+
+	if len(muxSignatureArr) != 2 {
+		return fmt.Errorf("Mux-Signature in request header should be 2 values long: %s", muxSignatureArr)
+	}
+
+	timestampArr := strings.Split(muxSignatureArr[0], "=")
+	v1SignatureArr := strings.Split(muxSignatureArr[1], "=")
+
+	if len(timestampArr) != 2 || len(v1SignatureArr) != 2 {
+		return fmt.Errorf("missing timestamp: %s or missing v1Signature: %s", timestampArr, v1SignatureArr)
+	}
+
+	timestamp := timestampArr[1]
+	v1Signature := v1SignatureArr[1]
+
+	webhookSecret := os.Getenv("DISCORD_WEBHOOK_SECRET")
+	payload := fmt.Sprintf("%s.%s", timestamp, string(body))
+	sha := generateHmacSignature(webhookSecret, payload)
+
+	if sha != v1Signature {
+		return errors.New("not a valid mux webhook signature")
+	}
+
+	fmt.Println("timestamp sha:", sha)
+	fmt.Println("v1Signature:", v1Signature)
+	return nil
 }
 
 // json responses

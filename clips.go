@@ -5,6 +5,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/majesticbeast/lostsons.tv/mux"
 
@@ -83,6 +84,7 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 		Username:      newForm.Username,
 		Tags:          newForm.Tags,
 		FeaturedUsers: newForm.FeaturedUsers,
+		DateUploaded:  time.Now(),
 	}
 
 	// Add clip to database

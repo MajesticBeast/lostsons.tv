@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -61,6 +62,8 @@ func (s *PostgresStore) GetAllClips() ([]Clip, error) {
 	for rows.Next() {
 		clip := new(Clip)
 		if err := rows.Scan(&clip.ID, &clip.PlaybackID, &clip.AssetID, &clip.DateUploaded, &clip.UserID, &clip.GameID, &clip.Description, &clip.Tags, &clip.FeaturedUsers, &clip.Game, &clip.Username); err != nil {
+			fmt.Printf("Scanned values: ID=%v, PlaybackID=%v, AssetID=%v, DateUploaded=%v, UserID=%v, GameID=%v, Description=%v, Tags=%v, FeaturedUsers=%v, Game=%v, Username=%v\n",
+				clip.ID, clip.PlaybackID, clip.AssetID, clip.DateUploaded, clip.UserID, clip.GameID, clip.Description, clip.Tags, clip.FeaturedUsers, clip.Game, clip.Username)
 			err = fmt.Errorf("error scanning rows: %w", err)
 			return nil, err
 		}
@@ -114,26 +117,37 @@ func (s *PostgresStore) CreateClip(clip Clip) error {
 	// SECTION: Tags insertion
 	//
 	// Insert the tags into the tags table. If the tag already exists, do nothing.
-	tagID := uuid.New().String()
+	tags := strings.Split(clip.Tags, ",")
 
-	insertTagsQuery := `INSERT INTO tags (id, tag_name) VALUES ($1, $2) ON CONFLICT (tag_name) DO UPDATE SET tag_name = EXCLUDED.tag_name RETURNING id`
-	err = s.db.QueryRow(context.Background(), insertTagsQuery, tagID, "creepin").Scan(&tagID)
+	for _, tag := range tags {
+		tag = strings.TrimSpace(tag)
 
-	if err != nil {
-		err = fmt.Errorf("error inserting tags: %w", err)
-		return err
-	}
+		// Skip tag if it is just whitespace
+		if len(tag) == 0 {
+			continue
+		}
 
-	// Insert the clip_id and tag_id into the clips_tags table
-	insertClipsTagsQuery := `INSERT INTO clips_tags (clip_id, tag_id) VALUES ($1, $2)`
-	_, err = s.db.Exec(context.Background(), insertClipsTagsQuery,
-		clip.ID,
-		tagID,
-	)
+		tagID := uuid.New().String()
 
-	if err != nil {
-		err = fmt.Errorf("error inserting clips_tags: %w", err)
-		return err
+		insertTagsQuery := `INSERT INTO tags (id, tag_name) VALUES ($1, $2) ON CONFLICT (tag_name) DO UPDATE SET tag_name = EXCLUDED.tag_name RETURNING id`
+		err = s.db.QueryRow(context.Background(), insertTagsQuery, tagID, tag).Scan(&tagID)
+
+		if err != nil {
+			err = fmt.Errorf("error inserting tags: %w", err)
+			return err
+		}
+
+		// Insert the clip_id and tag_id into the clips_tags table
+		insertClipsTagsQuery := `INSERT INTO clips_tags (clip_id, tag_id) VALUES ($1, $2)`
+		_, err = s.db.Exec(context.Background(), insertClipsTagsQuery,
+			clip.ID,
+			tagID,
+		)
+
+		if err != nil {
+			err = fmt.Errorf("error inserting clips_tags: %w", err)
+			return err
+		}
 	}
 
 	//
