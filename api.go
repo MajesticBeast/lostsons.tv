@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
@@ -96,13 +97,19 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 		responseWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	fmt.Println("right before assetResponse")
-	assetResponse := mux.VideoAsset{}
-	err = json.NewDecoder(r.Body).Decode(&assetResponse)
 
+	buf := new(bytes.Buffer)
+	_, err = buf.ReadFrom(bytes.NewReader(body))
 	if err != nil {
-		fmt.Println("error decoding mux webhook response", err, "\n", assetResponse, "\n")
-		err = fmt.Errorf("error decoding mux webhook response: %w", err)
+		err = fmt.Errorf("error copying request body to buffer: %w", err)
+		responseWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	assetResponse := new(mux.AssetResponse)
+	err = json.NewDecoder(buf).Decode(&assetResponse)
+	if err != nil {
+		err = fmt.Errorf("error decoding asset response: %w", err)
 		responseWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
