@@ -17,3 +17,8 @@ variable "spaces_secret_key" {
   type        = string
   description = "Secret Key for your DigitalOcean Space/Bucket"
 }
+
+variable "do_app_name" {
+  type        = string
+  description = "Name of your DigitalOcean App"
+}
