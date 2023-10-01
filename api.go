@@ -56,7 +56,7 @@ func (s *APIServer) Run() {
 	r.Mount("/clips", s.clipsRouter())
 
 	// Start server
-	fmt.Println("Starting server on port 3000")
+	log.Println("Starting server on port 3000")
 	log.Fatal(http.ListenAndServe(":3000", r))
 }
 

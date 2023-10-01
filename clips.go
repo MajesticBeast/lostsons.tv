@@ -65,10 +65,8 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	// Create a new Mux client
+	// Create a new Mux client and asset
 	client := mux.NewMuxClient()
-
-	// Create a Mux asset
 	asset, err := mux.CreateAsset(client, handler.Filename)
 	if err != nil {
 		err = fmt.Errorf("error creating mux asset: %w", err)
@@ -99,7 +97,6 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 	return nil
 }
 
-// Create a function to set up a new digital ocean session
 func NewDigitalOceanSession() (*session.Session, error) {
 	sess, err := session.NewSession(&aws.Config{
 		Region:           aws.String("us-east-1"),
@@ -119,13 +116,11 @@ func NewDigitalOceanSession() (*session.Session, error) {
 	return sess, nil
 }
 
-// Create a new s3 client
 func NewS3Client(sess *session.Session) (*s3.S3, error) {
 	svc := s3.New(sess)
 	return svc, nil
 }
 
-// Upload file to DigitalOcean Spaces
 func UploadFileToSpaces(svc *s3.S3, file multipart.File, handler *multipart.FileHeader) error {
 	_, err := svc.PutObject(&s3.PutObjectInput{
 		Bucket: aws.String("lostsonstv"),
