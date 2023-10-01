@@ -27,6 +27,6 @@ func main() {
 	}
 
 	// Initialize and run the API server
-	server := NewAPIServer(store)
+	server := NewAPIServer(store, log)
 	server.Run()
 }

@@ -8,18 +8,19 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gtuk/discordwebhook"
+	"github.com/majesticbeast/lostsons.tv/logger"
 	"github.com/majesticbeast/lostsons.tv/mux"
 )
 
 type APIServer struct {
 	store *PostgresStore
+	log   logger.Logger
 }
 
 type apiFunc func(http.ResponseWriter, *http.Request) error
@@ -28,8 +29,11 @@ type ApiError struct {
 	Error string `json:"error"`
 }
 
-func NewAPIServer(store *PostgresStore) *APIServer {
-	return &APIServer{store: store}
+func NewAPIServer(store *PostgresStore, log logger.Logger) *APIServer {
+	return &APIServer{
+		store: store,
+		log:   log,
+	}
 }
 
 func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
@@ -56,8 +60,8 @@ func (s *APIServer) Run() {
 	r.Mount("/clips", s.clipsRouter())
 
 	// Start server
-	log.Println("Starting server on port 3000")
-	log.Fatal(http.ListenAndServe(":3000", r))
+	s.log.Info("Starting server on port 3000")
+	s.log.Error(http.ListenAndServe(":3000", r).Error())
 }
 
 //
@@ -87,7 +91,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		err = fmt.Errorf("error reading mux webhook response body: %w", err)
 		responseWithError(w, http.StatusBadRequest, err.Error())
-		log.Println(err)
+		s.log.Error(err.Error())
 		return
 	}
 
@@ -95,7 +99,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		err = fmt.Errorf("error validating mux signature: %w", err)
 		responseWithError(w, http.StatusBadRequest, err.Error())
-		log.Println(err)
+		s.log.Error(err.Error())
 		return
 	}
 
@@ -103,7 +107,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(body, &assetResponse); err != nil {
 		err = fmt.Errorf("error unmarshalling mux webhook response body: %w", err)
 		responseWithError(w, http.StatusBadRequest, err.Error())
-		log.Println(err)
+		s.log.Error(err.Error())
 		return
 	}
 
@@ -111,7 +115,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		err = fmt.Errorf("error posting to discord webhook: %w", err)
 		responseWithError(w, http.StatusInternalServerError, err.Error())
-		log.Println(err)
+		s.log.Error(err.Error())
 		return
 	}
 
