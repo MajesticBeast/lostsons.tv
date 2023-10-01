@@ -25,23 +25,3 @@ resource "digitalocean_spaces_bucket" "bucket" {
     }
   }
 }
-
-// create a digital ocean app from a container in my digital ocean container repository
-resource "digitalocean_app" "app" {
-  name = var.do_app_name
-
-  spec {
-    services {
-      name = var.do_app_name
-
-      image {
-        repository_type = "DOCR"
-        repository      = var.do_repository_name
-        deploy_on_push  = "enabled"
-        tag             = "latest"
-      }
-
-      http_port = 80
-    }
-  }
-}

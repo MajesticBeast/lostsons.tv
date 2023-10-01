@@ -22,3 +22,8 @@ variable "do_app_name" {
   type        = string
   description = "Name of your DigitalOcean App"
 }
+
+variable "do_domain" {
+  type        = string
+  description = "Domain for your DigitalOcean App"
+}
