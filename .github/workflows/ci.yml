@@ -10,14 +10,7 @@ jobs:
         runs-on: ubuntu-latest
 
         env:
-            DBCONNSTR: ${{ secrets.DBCONNSTR }}
-            MUX_TOKEN_SECRET: ${{ secrets.MUX_TOKEN_SECRET }}
-            MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID }}
-            DO_SPACES_KEY: ${{ secrets.DO_SPACES_KEY }}
-            DO_SPACES_SECRET: ${{ secrets.DO_SPACES_SECRET }}
             DO_REGISTRY_ENDPOINT: ${{ secrets.DO_REGISTRY_ENDPOINT }}
-            DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
-            DISCORD_WEBHOOK_SECRET: ${{ secrets.DISCORD_WEBHOOK_SECRET }}
 
         steps:          
             - name: Check out main branch

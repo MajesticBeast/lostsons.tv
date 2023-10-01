@@ -2,3 +2,4 @@
 lostsonstv
 .terraform*
 *tfstate
+site/
