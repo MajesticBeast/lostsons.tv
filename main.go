@@ -11,10 +11,11 @@ func main() {
 	// Initialize logger
 	log := &logger.StdLogger{}
 
+	// Load environment variables
 	godotenv.Load()
-	dbConnStr := os.Getenv("DBCONNSTR")
 
 	// Initialize the database connection
+	dbConnStr := os.Getenv("DBCONNSTR")
 	store, err := NewPostgresStore(dbConnStr)
 	if err != nil {
 		log.Error(err.Error())
