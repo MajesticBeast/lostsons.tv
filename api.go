@@ -107,6 +107,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 	fmt.Println("right before unmarshal")
+	fmt.Println("body:", string(body))
 	assetResponse := mux.WebhookResponse{}
 	if err := json.Unmarshal(body, &assetResponse); err != nil {
 		fmt.Println("error unmarshalling mux webhook response body")
