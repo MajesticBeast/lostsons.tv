@@ -93,6 +93,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 
 	err = IsValidMuxSignature(r, body)
 	if err != nil {
+		fmt.Println("error validating mux signature")
 		err = fmt.Errorf("error validating mux signature: %w", err)
 		responseWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -101,6 +102,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 	buf := new(bytes.Buffer)
 	_, err = buf.ReadFrom(bytes.NewReader(body))
 	if err != nil {
+		fmt.Println("error copying request body to buffer")
 		err = fmt.Errorf("error copying request body to buffer: %w", err)
 		responseWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -109,6 +111,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 	assetResponse := mux.WebhookResponse{}
 	err = json.NewDecoder(buf).Decode(&assetResponse)
 	if err != nil {
+		fmt.Println("error decoding asset response")
 		err = fmt.Errorf("error decoding asset response: %w", err)
 		responseWithError(w, http.StatusBadRequest, err.Error())
 		return
