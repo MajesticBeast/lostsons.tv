@@ -10,6 +10,6 @@ RUN go build -o lostsonstv
 FROM alpine:latest
 WORKDIR /app
 COPY --from=build-backend /app/lostsonstv ./
-COPY static ./static
+COPY templates ./templates
 EXPOSE 80
 CMD ["./lostsonstv"]
