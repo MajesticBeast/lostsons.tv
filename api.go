@@ -96,7 +96,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 		responseWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
+	fmt.Println("right before assetResponse")
 	assetResponse := mux.VideoAsset{}
 	err = json.NewDecoder(r.Body).Decode(&assetResponse)
 
@@ -105,7 +105,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 		responseWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
+	fmt.Println("right before PostToDiscordWebhook")
 	// Post to discord webhook URL
 	err = PostToDiscordWebhook(assetResponse)
 	if err != nil {
