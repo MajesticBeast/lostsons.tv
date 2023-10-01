@@ -87,48 +87,37 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		err = fmt.Errorf("error reading mux webhook response body: %w", err)
 		responseWithError(w, http.StatusBadRequest, err.Error())
+		log.Println(err)
 		return
 	}
 
 	err = IsValidMuxSignature(r, body)
 	if err != nil {
-		fmt.Println("error validating mux signature")
 		err = fmt.Errorf("error validating mux signature: %w", err)
 		responseWithError(w, http.StatusBadRequest, err.Error())
+		log.Println(err)
 		return
 	}
-
-	// buf := new(bytes.Buffer)
-	// _, err = buf.ReadFrom(bytes.NewReader(body))
-	// if err != nil {
-	// 	fmt.Println("error copying request body to buffer")
-	// 	err = fmt.Errorf("error copying request body to buffer: %w", err)
-	// 	responseWithError(w, http.StatusBadRequest, err.Error())
-	// 	return
-	// }
 
 	assetResponse := mux.WebhookResponse{}
 	if err := json.Unmarshal(body, &assetResponse); err != nil {
-		fmt.Println("error unmarshalling mux webhook response body")
 		err = fmt.Errorf("error unmarshalling mux webhook response body: %w", err)
 		responseWithError(w, http.StatusBadRequest, err.Error())
+		log.Println(err)
 		return
 	}
 
-	fmt.Println("right before PostToDiscordWebhook")
-	// Post to discord webhook URL
 	err = PostToDiscordWebhook(assetResponse)
 	if err != nil {
-		fmt.Println("error posting to discord webhook")
 		err = fmt.Errorf("error posting to discord webhook: %w", err)
 		responseWithError(w, http.StatusInternalServerError, err.Error())
+		log.Println(err)
 		return
 	}
 
 }
 
 func PostToDiscordWebhook(assetResponse mux.WebhookResponse) error {
-	fmt.Println("Posting to discord webhook")
 	username := "lostsons.tv"
 	content := fmt.Sprintf("New clip { %s }\nPlaybackID: %s", assetResponse.Type, assetResponse.Data.PlaybackIds[0].ID)
 	url := os.Getenv("DISCORD_WEBHOOK_URL")
