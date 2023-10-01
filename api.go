@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
@@ -91,35 +90,36 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = IsValidMuxSignature(r, body)
-	if err != nil {
-		fmt.Println("error validating mux signature")
-		err = fmt.Errorf("error validating mux signature: %w", err)
-		responseWithError(w, http.StatusBadRequest, err.Error())
-		return
-	}
+	// err = IsValidMuxSignature(r, body)
+	// if err != nil {
+	// 	fmt.Println("error validating mux signature")
+	// 	err = fmt.Errorf("error validating mux signature: %w", err)
+	// 	responseWithError(w, http.StatusBadRequest, err.Error())
+	// 	return
+	// }
 
-	buf := new(bytes.Buffer)
-	_, err = buf.ReadFrom(bytes.NewReader(body))
-	if err != nil {
-		fmt.Println("error copying request body to buffer")
-		err = fmt.Errorf("error copying request body to buffer: %w", err)
-		responseWithError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
+	// buf := new(bytes.Buffer)
+	// _, err = buf.ReadFrom(bytes.NewReader(body))
+	// if err != nil {
+	// 	fmt.Println("error copying request body to buffer")
+	// 	err = fmt.Errorf("error copying request body to buffer: %w", err)
+	// 	responseWithError(w, http.StatusBadRequest, err.Error())
+	// 	return
+	// }
+	fmt.Println("right before unmarshal")
 	assetResponse := mux.WebhookResponse{}
-	err = json.NewDecoder(buf).Decode(&assetResponse)
-	if err != nil {
-		fmt.Println("error decoding asset response")
-		err = fmt.Errorf("error decoding asset response: %w", err)
+	if err := json.Unmarshal(body, &assetResponse); err != nil {
+		fmt.Println("error unmarshalling mux webhook response body")
+		err = fmt.Errorf("error unmarshalling mux webhook response body: %w", err)
 		responseWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
 	fmt.Println("right before PostToDiscordWebhook")
 	// Post to discord webhook URL
 	err = PostToDiscordWebhook(assetResponse)
 	if err != nil {
+		fmt.Println("error posting to discord webhook")
 		err = fmt.Errorf("error posting to discord webhook: %w", err)
 		responseWithError(w, http.StatusInternalServerError, err.Error())
 		return
