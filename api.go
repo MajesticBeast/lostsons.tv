@@ -106,7 +106,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	assetResponse := new(mux.AssetResponse)
+	assetResponse := mux.WebhookResponse{}
 	err = json.NewDecoder(buf).Decode(&assetResponse)
 	if err != nil {
 		err = fmt.Errorf("error decoding asset response: %w", err)
@@ -124,10 +124,10 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func PostToDiscordWebhook(assetResponse mux.VideoAsset) error {
+func PostToDiscordWebhook(assetResponse mux.WebhookResponse) error {
 	fmt.Println("Posting to discord webhook")
 	username := "lostsons.tv"
-	content := fmt.Sprintf("New clip { %s }\nPlaybackID: %s", assetResponse.Type, assetResponse.Data.PlaybackIds[0].ID)
+	content := fmt.Sprintf("New clip { %s }\nAssetID: %s", assetResponse.Type, assetResponse.Data.Tracks[0].ID)
 	url := os.Getenv("DISCORD_WEBHOOK_URL")
 	message := discordwebhook.Message{
 		Username: &username,

@@ -74,3 +74,39 @@ type VideoAsset struct {
 	AccessorSource any `json:"accessor_source"`
 	Accessor       any `json:"accessor"`
 }
+
+type WebhookResponse struct {
+	Type   string `json:"type"`
+	Object struct {
+		Type string `json:"type"`
+		ID   string `json:"id"`
+	} `json:"object"`
+	ID          string `json:"id"`
+	Environment struct {
+		Name string `json:"name"`
+		ID   string `json:"id"`
+	} `json:"environment"`
+	Data struct {
+		Tracks []struct {
+			Type             string  `json:"type"`
+			MaxWidth         int     `json:"max_width,omitempty"`
+			MaxHeight        int     `json:"max_height,omitempty"`
+			MaxFrameRate     float64 `json:"max_frame_rate,omitempty"`
+			ID               string  `json:"id"`
+			Duration         float64 `json:"duration"`
+			MaxChannels      int     `json:"max_channels,omitempty"`
+			MaxChannelLayout string  `json:"max_channel_layout,omitempty"`
+		} `json:"tracks"`
+		Status              string    `json:"status"`
+		MaxStoredResolution string    `json:"max_stored_resolution"`
+		MaxStoredFrameRate  float64   `json:"max_stored_frame_rate"`
+		ID                  string    `json:"id"`
+		Duration            float64   `json:"duration"`
+		CreatedAt           time.Time `json:"created_at"`
+		AspectRatio         string    `json:"aspect_ratio"`
+	} `json:"data"`
+	CreatedAt      time.Time `json:"created_at"`
+	AccessorSource any       `json:"accessor_source"`
+	Accessor       any       `json:"accessor"`
+	RequestID      any       `json:"request_id"`
+}
