@@ -48,12 +48,12 @@ func (s *APIServer) Run() {
 
 	// Initialize main router and routes
 	r := chi.NewRouter()
-	r.Get("/", s.handleIndex)
-	r.Get("/healthDB", s.handleHealthDB)
-	r.Get("/healthHTTP", s.handleHealthHTTP)
+	r.Get("/", makeHTTPHandleFunc(s.handleIndex))
+	r.Get("/healthDB", makeHTTPHandleFunc(s.handleHealthDB))
+	r.Get("/healthHTTP", makeHTTPHandleFunc(s.handleHealthHTTP))
 
 	// Mux webhook route
-	r.Post("/mux-webhook", s.handleMuxWebhook)
+	r.Post("/mux-webhook", makeHTTPHandleFunc(s.handleMuxWebhook))
 
 	// Mount subrouters router
 	r.Mount("/admin", s.adminRouter())
@@ -65,60 +65,51 @@ func (s *APIServer) Run() {
 }
 
 //
-// Route Handlers
+// Routes
 //
 
-func (s *APIServer) handleHealthDB(w http.ResponseWriter, r *http.Request) {
+func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) error {
+	return responseWithJSON(w, http.StatusOK, map[string]string{"message": "hello world"})
+}
+
+func (s *APIServer) handleHealthDB(w http.ResponseWriter, r *http.Request) error {
 	err := s.store.db.Ping(r.Context())
 	if err != nil {
-		responseWithError(w, http.StatusInternalServerError, "dead")
+		return responseWithError(w, http.StatusInternalServerError, "dead")
 	}
+	return responseWithJSON(w, http.StatusOK, map[string]string{"db": "alive"})
 
-	responseWithJSON(w, http.StatusOK, map[string]string{"db": "alive"})
 }
 
-func (s *APIServer) handleHealthHTTP(w http.ResponseWriter, r *http.Request) {
-	responseWithJSON(w, http.StatusOK, map[string]string{"http": "alive"})
+func (s *APIServer) handleHealthHTTP(w http.ResponseWriter, r *http.Request) error {
+	return responseWithJSON(w, http.StatusOK, map[string]string{"http": "alive"})
 }
 
-func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) {
-	responseWithJSON(w, http.StatusOK, map[string]string{"message": "hello world"})
-}
-
-func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) {
-
+func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) error {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		err = fmt.Errorf("error reading mux webhook response body: %w", err)
-		responseWithError(w, http.StatusBadRequest, err.Error())
-		s.log.Error(err.Error())
-		return
+		return responseWithError(w, http.StatusBadRequest, err.Error())
 	}
 
 	err = IsValidMuxSignature(r, body)
 	if err != nil {
 		err = fmt.Errorf("error validating mux signature: %w", err)
-		responseWithError(w, http.StatusBadRequest, err.Error())
-		s.log.Error(err.Error())
-		return
+		return responseWithError(w, http.StatusBadRequest, err.Error())
 	}
 
 	assetResponse := mux.WebhookResponse{}
 	if err := json.Unmarshal(body, &assetResponse); err != nil {
 		err = fmt.Errorf("error unmarshalling mux webhook response body: %w", err)
-		responseWithError(w, http.StatusBadRequest, err.Error())
-		s.log.Error(err.Error())
-		return
+		return responseWithError(w, http.StatusBadRequest, err.Error())
 	}
 
 	err = PostToDiscordWebhook(assetResponse)
 	if err != nil {
-		err = fmt.Errorf("error posting to discord webhook: %w", err)
-		responseWithError(w, http.StatusInternalServerError, err.Error())
-		s.log.Error(err.Error())
-		return
+		return responseWithError(w, http.StatusInternalServerError, err.Error())
 	}
 
+	return nil
 }
 
 func PostToDiscordWebhook(assetResponse mux.WebhookResponse) error {
@@ -139,12 +130,14 @@ func PostToDiscordWebhook(assetResponse mux.WebhookResponse) error {
 	return nil
 }
 
+// Mux webhook signature validation
 func generateHmacSignature(webhookSecret, payload string) string {
 	h := hmac.New(sha256.New, []byte(webhookSecret))
 	h.Write([]byte(payload))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
+// IsValidMuxSignature validates the mux webhook signature
 func IsValidMuxSignature(r *http.Request, body []byte) error {
 	muxSignature := r.Header.Get("Mux-Signature")
 
@@ -176,25 +169,16 @@ func IsValidMuxSignature(r *http.Request, body []byte) error {
 		return errors.New("not a valid mux webhook signature")
 	}
 
-	fmt.Println("timestamp sha:", sha)
-	fmt.Println("v1Signature:", v1Signature)
 	return nil
 }
 
-// json responses
-func responseWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	response, err := json.Marshal(payload)
-	if err != nil {
-		responseWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
+// JSON responses
+func responseWithJSON(w http.ResponseWriter, code int, payload interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(code)
-	w.Write(response)
+	return json.NewEncoder(w).Encode(payload)
 }
 
-func responseWithError(w http.ResponseWriter, code int, message string) {
-	responseWithJSON(w, code, map[string]string{"error": message})
+func responseWithError(w http.ResponseWriter, code int, payload string) error {
+	return responseWithJSON(w, code, map[string]string{"error": payload})
 }
