@@ -9,7 +9,7 @@ import (
 
 func (s *APIServer) usersRouter() chi.Router {
 	r := chi.NewRouter()
-	r.Post("/new", makeHTTPHandleFunc(s.handleCreateClip))
+	r.Post("/new", makeHTTPHandleFunc(s.handleCreateUser))
 
 	return r
 }
