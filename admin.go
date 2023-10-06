@@ -11,6 +11,9 @@ import (
 func (s *APIServer) adminRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", s.handleAdminIndex)
+	r.Get("/games", s.handleAdminGames)
+	r.Get("/users", s.handleAdminUsers)
+	r.Get("/clips", s.handleAdminClips)
 
 	return r
 }
@@ -19,12 +22,64 @@ func (s *APIServer) adminRouter() chi.Router {
 //
 // --> /index
 func (s *APIServer) handleAdminIndex(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("./templates/admin/index.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := t.Execute(w, nil); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// List of games
+//
+// --> /games
+func (s *APIServer) handleAdminGames(w http.ResponseWriter, r *http.Request) {
+	games, err := s.store.GetAllGames()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	t, err := template.ParseFiles("./templates/admin/games.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := t.Execute(w, games); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// List of users
+//
+// --> /users
+func (s *APIServer) handleAdminUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := s.store.GetAllUsers()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	t, err := template.ParseFiles("./templates/admin/users.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := t.Execute(w, users); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// List of clips
+//
+// --> /clips
+func (s *APIServer) handleAdminClips(w http.ResponseWriter, r *http.Request) {
 	clips, err := s.store.GetAllClips()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	t, err := template.ParseFiles("./templates/admin/index.html")
+	t, err := template.ParseFiles("./templates/admin/clips.html")
 	if err != nil {
 		log.Fatal(err)
 	}

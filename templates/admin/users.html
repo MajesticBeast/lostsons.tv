@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+</head>
+
+<body>
+    <!-- create add user form with fields username, email -->
+    <h3>Add User</h3>
+    <form action="/users/new" method="post">
+        <label for="username">Username:</label>
+        <input type="text" name="username" id="username"><br />
+        <label for="email">Email:</label>
+        <input type="text" name="email" id="email"><br />
+        <input type="submit" value="Submit">
+    </form>
+
+    <!-- list all users -->
+    <h3>View Users</h3>
+    {{ range $user := . }}
+    <p>------------------</p>
+    User ID: {{ .ID }}<br />
+    Username: {{ .Username }}<br />
+    Email: {{ .Email }}<br />
+    {{ end }}
+
+</body>
+
+
+
+</html>

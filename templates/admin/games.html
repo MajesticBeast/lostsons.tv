@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+</head>
+
+<body>
+    <h3>Add Game</h3>
+    <form action="/games/new" method="post">
+        <label for="name">Game:</label>
+        <input type="text" name="name" id="name"><br />
+        <input type="submit" value="Submit">
+    </form>
+
+    <h3>View Games</h3>
+    {{ range $game := . }}
+    <p>------------------</p>
+    Game ID: {{ .ID }}<br />
+    Game name: {{ .Name }}<br />
+    {{ end }}
+
+</body>
+
+
+
+</html>

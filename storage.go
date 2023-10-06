@@ -308,6 +308,31 @@ func (s *PostgresStore) CreateUser(user User) error {
 	return nil
 }
 
+// Get list of all users
+func (s *PostgresStore) GetAllUsers() ([]User, error) {
+	users := []User{}
+
+	query := `SELECT * FROM users`
+	rows, err := s.db.Query(context.Background(), query)
+	if err != nil {
+		err = fmt.Errorf("error getting all users: %w", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		user := new(User)
+		if err := rows.Scan(&user.ID, &user.Username, &user.Email); err != nil {
+			err = fmt.Errorf("error scanning rows: %w", err)
+			return nil, err
+		}
+
+		users = append(users, *user)
+	}
+
+	return users, nil
+}
+
 // Get a user by username
 func (s *PostgresStore) GetUserByUsername(username string) (User, error) {
 	user := User{}
