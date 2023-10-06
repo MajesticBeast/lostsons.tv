@@ -54,14 +54,9 @@ func parseUserForm(r *http.Request) (User, error) {
 	return user, nil
 }
 
-// Create a function to validate the NewUserForm
 func validateUserForm(userForm NewUserForm) error {
-	if userForm.Username == "" {
-		return fmt.Errorf("username is required")
-	}
-
-	if userForm.Email == "" {
-		return fmt.Errorf("email is required")
+	if userForm.Username != "majesticbeast" && userForm.Username != "devient" && userForm.Username != "ivorygun" {
+		return fmt.Errorf("username is invalid")
 	}
 
 	ev := ev.NewVerifier()
