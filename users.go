@@ -22,9 +22,13 @@ func (s *APIServer) handleCreateUser(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	// Check if user already exists
+	// Check if user or email already exists
 	if _, err := s.store.GetUserByUsername(user.Username); err == nil {
 		return fmt.Errorf("user already exists")
+	}
+
+	if _, err := s.store.GetUserByEmail(user.Email); err == nil {
+		return fmt.Errorf("email already exists")
 	}
 
 	// Create user

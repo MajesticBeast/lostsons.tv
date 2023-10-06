@@ -321,3 +321,17 @@ func (s *PostgresStore) GetUserByUsername(username string) (User, error) {
 
 	return user, nil
 }
+
+// Get a user by email
+func (s *PostgresStore) GetUserByEmail(email string) (User, error) {
+	user := User{}
+
+	query := `SELECT * FROM users WHERE email = $1`
+	err := s.db.QueryRow(context.Background(), query, email).Scan(&user.ID, &user.Username, &user.Email)
+	if err != nil {
+		err = fmt.Errorf("error getting user by email: %w", err)
+		return user, err
+	}
+
+	return user, nil
+}
