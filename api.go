@@ -59,6 +59,7 @@ func (s *APIServer) Run() {
 	r.Mount("/admin", s.adminRouter())
 	r.Mount("/clips", s.clipsRouter())
 	r.Mount("/users", s.usersRouter())
+	r.Mount("/games", s.gamesRouter())
 
 	// Start server
 	s.log.Info("Starting server on port 3000")

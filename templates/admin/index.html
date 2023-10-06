@@ -35,6 +35,14 @@
         <input type="submit" value="Submit">
     </form>
 
+    <!-- create add game form with fields for game name -->
+    <h3>Add Game</h3>
+    <form action="/games/new" method="post">
+        <label for="game">Game:</label>
+        <input type="text" name="game" id="game"><br />
+        <input type="submit" value="Submit">
+    </form>
+
 
     <h3>View Clips</h3>
     {{ range $clip := . }}
@@ -52,5 +60,7 @@
     Featured players: {{ .FeaturedUsers }}<br />
     {{ end }}
 </body>
+
+
 
 </html>

@@ -36,3 +36,12 @@ type NewUserForm struct {
 	Username string
 	Email    string
 }
+
+type Game struct {
+	ID   string
+	Name string
+}
+
+type NewGameForm struct {
+	Name string
+}

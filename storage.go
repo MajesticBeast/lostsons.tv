@@ -335,3 +335,35 @@ func (s *PostgresStore) GetUserByEmail(email string) (User, error) {
 
 	return user, nil
 }
+
+// Get a game by name
+func (s *PostgresStore) GetGameByName(name string) (Game, error) {
+	game := Game{}
+
+	query := `SELECT * FROM games WHERE name = $1`
+	err := s.db.QueryRow(context.Background(), query, name).Scan(&game.ID, &game.Name)
+	if err != nil {
+		err = fmt.Errorf("error getting game by name: %w", err)
+		return game, err
+	}
+
+	return game, nil
+}
+
+// Enter a new game into database
+func (s *PostgresStore) CreateGame(game Game) error {
+	game.ID = uuid.New().String()
+
+	query := `INSERT INTO games (id, name) VALUES ($1, $2)`
+	_, err := s.db.Exec(context.Background(), query,
+		game.ID,
+		game.Name,
+	)
+
+	if err != nil {
+		err = fmt.Errorf("error inserting game: %w", err)
+		return err
+	}
+
+	return nil
+}
