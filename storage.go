@@ -336,6 +336,31 @@ func (s *PostgresStore) GetUserByEmail(email string) (User, error) {
 	return user, nil
 }
 
+// Get list of all games
+func (s *PostgresStore) GetAllGames() ([]Game, error) {
+	games := []Game{}
+
+	query := `SELECT * FROM games`
+	rows, err := s.db.Query(context.Background(), query)
+	if err != nil {
+		err = fmt.Errorf("error getting all games: %w", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		game := new(Game)
+		if err := rows.Scan(&game.ID, &game.Name); err != nil {
+			err = fmt.Errorf("error scanning rows: %w", err)
+			return nil, err
+		}
+
+		games = append(games, *game)
+	}
+
+	return games, nil
+}
+
 // Get a game by name
 func (s *PostgresStore) GetGameByName(name string) (Game, error) {
 	game := Game{}

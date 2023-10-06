@@ -43,6 +43,49 @@
         <input type="submit" value="Submit">
     </form>
 
+    <table>
+        <thead>
+            <tr>
+                <th>Clips</th>
+                <th>Games</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <h3>View Clips</h3>
+                    {{ range $clip := . }}
+                    <p>------------------</p>
+                    Clip ID: {{ .ID }}<br />
+                    Playback ID: {{ .PlaybackID }}<br />
+                    Asset ID: {{ .AssetID }}<br />
+                    Date uploaded: {{ .DateUploaded }}<br />
+                    Description: {{ .Description }}<br />
+                    User ID: {{ .UserID }}<br />
+                    Uploader: {{ .Username }}<br />
+                    Game ID: {{ .Game }}<br />
+                    Game name: {{ .GameID }}<br />
+                    Tags: {{ .Tags }}<br />
+                    Featured players: {{ .FeaturedUsers }}<br />
+                    {{ end }}
+                </td>
+                <td>
+                    <h3>View Games</h3>
+                    {{ range $game := . }}
+                    <p>------------------</p>
+                    Game ID: {{ .ID }}<br />
+                    Game name: {{ .Name }}<br />
+                    {{ end }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <h3>View Games</h3>
+    {{ range $game := . }}
+    <p>------------------</p>
+    Game ID: {{ .ID }}<br />
+    Game name: {{ .Name }}<br />
+    {{ end }}
 
     <h3>View Clips</h3>
     {{ range $clip := . }}
