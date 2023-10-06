@@ -25,3 +25,14 @@ type NewClipForm struct {
 	Tags          string
 	FeaturedUsers string
 }
+
+type User struct {
+	ID       string
+	Username string
+	Email    string
+}
+
+type NewUserForm struct {
+	Username string
+	Email    string
+}

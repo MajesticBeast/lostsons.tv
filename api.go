@@ -58,15 +58,14 @@ func (s *APIServer) Run() {
 	// Mount subrouters router
 	r.Mount("/admin", s.adminRouter())
 	r.Mount("/clips", s.clipsRouter())
+	r.Mount("/users", s.usersRouter())
 
 	// Start server
 	s.log.Info("Starting server on port 3000")
 	s.log.Error(http.ListenAndServe(":3000", r).Error())
 }
 
-//
 // Routes
-//
 
 func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) error {
 	return responseWithJSON(w, http.StatusOK, map[string]string{"message": "hello world"})

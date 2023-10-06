@@ -25,7 +25,6 @@ func (s *APIServer) clipsRouter() chi.Router {
 
 // Route for submitting a clip
 func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) error {
-
 	newForm := new(NewClipForm)
 	if err := r.ParseMultipartForm(45 << 20); err != nil {
 		err = fmt.Errorf("error parsing multipart form: %w", err)
@@ -92,9 +91,7 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	responseWithJSON(w, http.StatusOK, "success")
-
-	return nil
+	return responseWithJSON(w, http.StatusOK, "success")
 }
 
 func NewDigitalOceanSession() (*session.Session, error) {

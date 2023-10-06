@@ -24,22 +24,33 @@
         <label for="username">User ID:</label>
         <input type="text" name="username" id="username"><br />
         <input type="submit" value="Submit">
+    </form>
+    <!-- create add user form with fields username, email -->
+    <h3>Add User</h3>
+    <form action="/users/new" method="post">
+        <label for="username">Username:</label>
+        <input type="text" name="username" id="username"><br />
+        <label for="email">Email:</label>
+        <input type="text" name="email" id="email"><br />
+        <input type="submit" value="Submit">
+    </form>
 
-        <h3>View Clips</h3>
-        {{ range $clip := . }}
-        <p>------------------</p>
-        Clip ID: {{ .ID }}<br />
-        Playback ID: {{ .PlaybackID }}<br />
-        Asset ID: {{ .AssetID }}<br />
-        Date uploaded: {{ .DateUploaded }}<br />
-        Description: {{ .Description }}<br />
-        User ID: {{ .UserID }}<br />
-        Uploader: {{ .Username }}<br />
-        Game ID: {{ .Game }}<br />
-        Game name: {{ .GameID }}<br />
-        Tags: {{ .Tags }}<br />
-        Featured players: {{ .FeaturedUsers }}<br />
-        {{ end }}
+
+    <h3>View Clips</h3>
+    {{ range $clip := . }}
+    <p>------------------</p>
+    Clip ID: {{ .ID }}<br />
+    Playback ID: {{ .PlaybackID }}<br />
+    Asset ID: {{ .AssetID }}<br />
+    Date uploaded: {{ .DateUploaded }}<br />
+    Description: {{ .Description }}<br />
+    User ID: {{ .UserID }}<br />
+    Uploader: {{ .Username }}<br />
+    Game ID: {{ .Game }}<br />
+    Game name: {{ .GameID }}<br />
+    Tags: {{ .Tags }}<br />
+    Featured players: {{ .FeaturedUsers }}<br />
+    {{ end }}
 </body>
 
 </html>

@@ -288,3 +288,36 @@ func (s *PostgresStore) createClipsUsersTable() error {
 	_, err := s.db.Exec(context.Background(), query)
 	return err
 }
+
+// Enter a new user into database
+func (s *PostgresStore) CreateUser(user User) error {
+	user.ID = uuid.New().String()
+
+	query := `INSERT INTO users (id, username, email) VALUES ($1, $2, $3)`
+	_, err := s.db.Exec(context.Background(), query,
+		user.ID,
+		user.Username,
+		user.Email,
+	)
+
+	if err != nil {
+		err = fmt.Errorf("error inserting user: %w", err)
+		return err
+	}
+
+	return nil
+}
+
+// Get a user by username
+func (s *PostgresStore) GetUserByUsername(username string) (User, error) {
+	user := User{}
+
+	query := `SELECT * FROM users WHERE username = $1`
+	err := s.db.QueryRow(context.Background(), query, username).Scan(&user.ID, &user.Username, &user.Email)
+	if err != nil {
+		err = fmt.Errorf("error getting user by username: %w", err)
+		return user, err
+	}
+
+	return user, nil
+}
