@@ -47,3 +47,7 @@ WHERE
 GROUP BY
 	c.id, c.description, g.name, u.username;`
 }
+
+func buildCreateClipQuery() string {
+	return `INSERT INTO clips (id, playback_id, asset_id, date_uploaded, description, user_id, game_id) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+}

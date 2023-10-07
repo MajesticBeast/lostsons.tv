@@ -96,7 +96,7 @@ func (s *PostgresStore) CreateClip(clip Clip) error {
 	clip.ID = uuid.New().String()
 	clip.UserID = user_id
 	clip.GameID = game_id
-	insertClipQuery := `INSERT INTO clips (id, playback_id, asset_id, date_uploaded, description, user_id, game_id) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	insertClipQuery := buildCreateClipQuery()
 
 	_, err = s.db.Exec(context.Background(), insertClipQuery,
 		clip.ID,
