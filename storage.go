@@ -29,6 +29,130 @@ func NewPostgresStore(dbConnStr string) (*PostgresStore, error) {
 	return &PostgresStore{db: db}, nil
 }
 
+/*
+ *
+ *
+ * Tables
+ *
+ *
+ */
+
+func (s *PostgresStore) Init() error {
+
+	err := s.createGamesTable()
+	if err != nil {
+		return err
+	}
+
+	err = s.createUsersTable()
+	if err != nil {
+		return err
+	}
+
+	err = s.createTagsTable()
+	if err != nil {
+		return err
+	}
+
+	err = s.createClipsTable()
+	if err != nil {
+		return err
+	}
+
+	err = s.createClipsTagsTable()
+	if err != nil {
+		return err
+	}
+
+	err = s.createClipsUsersTable()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *PostgresStore) createClipsTable() error {
+	query := `CREATE TABLE IF NOT EXISTS clips (
+		id varchar(128) UNIQUE NOT NULL,
+		playback_id varchar(200) UNIQUE NOT NULL,
+		asset_id varchar(200) UNIQUE NOT NULL,
+		date_uploaded timestamp NOT NULL,
+		user_id varchar(128) NOT NULL,
+		game_id varchar(128) NOT NULL,
+		description varchar(120) NOT NULL,
+		PRIMARY KEY (id),
+		CONSTRAINT fk_game_id FOREIGN KEY (game_id) REFERENCES games(id),
+		CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+	)`
+
+	_, err := s.db.Exec(context.Background(), query)
+	return err
+}
+
+func (s *PostgresStore) createTagsTable() error {
+	query := `CREATE TABLE IF NOT EXISTS tags (
+		id varchar(128) UNIQUE NOT NULL,
+		tag_name varchar(20) UNIQUE NOT NULL
+	)`
+
+	_, err := s.db.Exec(context.Background(), query)
+	return err
+}
+
+func (s *PostgresStore) createClipsTagsTable() error {
+	query := `CREATE TABLE IF NOT EXISTS clips_tags (
+		clip_id varchar(128) NOT NULL,
+		tag_id varchar(128) NOT NULL,
+		CONSTRAINT fk_clip_id FOREIGN KEY (clip_id) REFERENCES clips(id),
+		CONSTRAINT fk_tag_id FOREIGN KEY (tag_id) REFERENCES tags(id)	
+	)`
+
+	_, err := s.db.Exec(context.Background(), query)
+	return err
+}
+
+func (s *PostgresStore) createUsersTable() error {
+	query := `CREATE TABLE IF NOT EXISTS users (
+		id varchar(128) UNIQUE NOT NULL,
+		username varchar(35) UNIQUE NOT NULL,
+		email varchar(60) UNIQUE NOT NULL
+	)`
+
+	_, err := s.db.Exec(context.Background(), query)
+	return err
+}
+
+func (s *PostgresStore) createGamesTable() error {
+	query := `CREATE TABLE IF NOT EXISTS games (
+		id varchar(128) UNIQUE NOT NULL,
+		name varchar(60) NOT NULL,
+		PRIMARY KEY ("id")
+	)`
+
+	_, err := s.db.Exec(context.Background(), query)
+	return err
+}
+
+func (s *PostgresStore) createClipsUsersTable() error {
+	query := `CREATE TABLE IF NOT EXISTS clips_users (
+		clip_id varchar(128) NOT NULL,
+		user_id varchar(128) NOT NULL,
+		CONSTRAINT fk_clip_id FOREIGN KEY (clip_id) REFERENCES clips(id),
+		CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+	)`
+	_, err := s.db.Exec(context.Background(), query)
+	return err
+}
+
+/*
+ *
+ *
+ * Clips
+ *
+ *
+ */
+
 func (s *PostgresStore) GetClip(id string) (Clip, error) {
 	clip := Clip{}
 
@@ -181,113 +305,13 @@ func (s *PostgresStore) getIDFromString(name string, table string, column string
 	return uuid, nil
 }
 
-func (s *PostgresStore) Init() error {
-
-	err := s.createGamesTable()
-	if err != nil {
-		return err
-	}
-
-	err = s.createUsersTable()
-	if err != nil {
-		return err
-	}
-
-	err = s.createTagsTable()
-	if err != nil {
-		return err
-	}
-
-	err = s.createClipsTable()
-	if err != nil {
-		return err
-	}
-
-	err = s.createClipsTagsTable()
-	if err != nil {
-		return err
-	}
-
-	err = s.createClipsUsersTable()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *PostgresStore) createClipsTable() error {
-	query := `CREATE TABLE IF NOT EXISTS clips (
-		id varchar(128) UNIQUE NOT NULL,
-		playback_id varchar(200) UNIQUE NOT NULL,
-		asset_id varchar(200) UNIQUE NOT NULL,
-		date_uploaded timestamp NOT NULL,
-		user_id varchar(128) NOT NULL,
-		game_id varchar(128) NOT NULL,
-		description varchar(120) NOT NULL,
-		PRIMARY KEY (id),
-		CONSTRAINT fk_game_id FOREIGN KEY (game_id) REFERENCES games(id),
-		CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id)
-	)`
-
-	_, err := s.db.Exec(context.Background(), query)
-	return err
-}
-
-func (s *PostgresStore) createTagsTable() error {
-	query := `CREATE TABLE IF NOT EXISTS tags (
-		id varchar(128) UNIQUE NOT NULL,
-		tag_name varchar(20) UNIQUE NOT NULL
-	)`
-
-	_, err := s.db.Exec(context.Background(), query)
-	return err
-}
-
-func (s *PostgresStore) createClipsTagsTable() error {
-	query := `CREATE TABLE IF NOT EXISTS clips_tags (
-		clip_id varchar(128) NOT NULL,
-		tag_id varchar(128) NOT NULL,
-		CONSTRAINT fk_clip_id FOREIGN KEY (clip_id) REFERENCES clips(id),
-		CONSTRAINT fk_tag_id FOREIGN KEY (tag_id) REFERENCES tags(id)	
-	)`
-
-	_, err := s.db.Exec(context.Background(), query)
-	return err
-}
-
-func (s *PostgresStore) createUsersTable() error {
-	query := `CREATE TABLE IF NOT EXISTS users (
-		id varchar(128) UNIQUE NOT NULL,
-		username varchar(35) UNIQUE NOT NULL,
-		email varchar(60) UNIQUE NOT NULL
-	)`
-
-	_, err := s.db.Exec(context.Background(), query)
-	return err
-}
-
-func (s *PostgresStore) createGamesTable() error {
-	query := `CREATE TABLE IF NOT EXISTS games (
-		id varchar(128) UNIQUE NOT NULL,
-		name varchar(60) NOT NULL,
-		PRIMARY KEY ("id")
-	)`
-
-	_, err := s.db.Exec(context.Background(), query)
-	return err
-}
-
-func (s *PostgresStore) createClipsUsersTable() error {
-	query := `CREATE TABLE IF NOT EXISTS clips_users (
-		clip_id varchar(128) NOT NULL,
-		user_id varchar(128) NOT NULL,
-		CONSTRAINT fk_clip_id FOREIGN KEY (clip_id) REFERENCES clips(id),
-		CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id)
-	)`
-	_, err := s.db.Exec(context.Background(), query)
-	return err
-}
+/*
+ *
+ *
+ * Users
+ *
+ *
+ */
 
 // Enter a new user into database
 func (s *PostgresStore) CreateUser(user User) error {
@@ -360,6 +384,14 @@ func (s *PostgresStore) GetUserByEmail(email string) (User, error) {
 
 	return user, nil
 }
+
+/*
+ *
+ *
+ * Games
+ *
+ *
+ */
 
 // Get list of all games
 func (s *PostgresStore) GetAllGames() ([]Game, error) {
