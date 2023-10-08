@@ -49,10 +49,10 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 		Scopes:       []string{"identify"},
 	}
 
-	code := r.URL.Query()["code"][0]
+	code := r.URL.Query().Get("code")
 	token, err := oauth2Config.Exchange(r.Context(), code)
 	if err != nil {
-		err = fmt.Errorf("error exchanging code for token: %w", err)
+		err = fmt.Errorf("error exchanging code (%s) for token: %w", code, err)
 		return err
 	}
 
