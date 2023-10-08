@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -88,6 +90,15 @@ func (s *APIServer) Run() {
 // Routes
 
 func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) error {
+	t, err := template.ParseFiles("./templates/index.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := t.Execute(w, nil); err != nil {
+		log.Fatal(err)
+	}
+
 	return responseWithJSON(w, http.StatusOK, map[string]string{"message": "hello world"})
 }
 
