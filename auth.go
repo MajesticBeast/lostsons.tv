@@ -44,7 +44,7 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 		ClientID:     os.Getenv("DISCORD_OAUTH_ID"),
 		ClientSecret: os.Getenv("DISCORD_OAUTH_SECRET"),
 		RedirectURL:  os.Getenv("DISCORD_OAUTH_REDIRECT"),
-		Endpoint:     oauth2.Endpoint{TokenURL: os.Getenv("DISCORD_OAUTH_TOKEN")},
+		Endpoint:     oauth2.Endpoint{TokenURL: os.Getenv("DISCORD_OAUTH_ENDPOINT")},
 		Scopes:       []string{"identify", "email"},
 	}
 
