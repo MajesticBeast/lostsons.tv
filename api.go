@@ -13,10 +13,17 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth"
 	"github.com/gtuk/discordwebhook"
 	"github.com/majesticbeast/lostsons.tv/logger"
 	"github.com/majesticbeast/lostsons.tv/mux"
 )
+
+var tokenAuth *jwtauth.JWTAuth
+
+func init() {
+	tokenAuth = jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
+}
 
 type APIServer struct {
 	store *PostgresStore
@@ -55,11 +62,25 @@ func (s *APIServer) Run() {
 	// Mux webhook route
 	r.Post("/mux-webhook", makeHTTPHandleFunc(s.handleMuxWebhook))
 
-	// Mount subrouters router
-	r.Mount("/admin", s.adminRouter())
+	/*
+	 * Mount subrouters
+	 */
+
+	// Protected routes
+	r.Group(func(r chi.Router) {
+		// Seek, verify, and validate JWT tokens
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator)
+		r.Mount("/admin", s.adminRouter())
+	})
+
+	// IN THE MIDDLE OF ADDING AUTHENTICATION. DOES AUTH ROUTES WORK INSIDE PROTECTED ROUTES?
+
+	// Unprotected routes
 	r.Mount("/clips", s.clipsRouter())
 	r.Mount("/users", s.usersRouter())
 	r.Mount("/games", s.gamesRouter())
+	r.Mount("/auth", s.authRouter())
 
 	// Start server
 	s.log.Info("Starting server on port 3000")
