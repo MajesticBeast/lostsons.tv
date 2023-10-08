@@ -12,6 +12,7 @@ import (
 type Storage interface {
 	IsAlive() bool
 	UpdateClipToDeleted(string) error
+	UpdateClipIDToDeleted(string) error
 	CreateClip(Clip) error
 	GetClip(string) (Clip, error)
 	GetAllClips() ([]Clip, error)
