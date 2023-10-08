@@ -29,7 +29,6 @@ func (s *APIServer) authRouter() chi.Router {
 	return r
 }
 
-// Route for discord login
 func (s *APIServer) handleDiscordLogin(w http.ResponseWriter, r *http.Request) error {
 	oauth2Config := &oauth2.Config{
 		ClientID:    os.Getenv("DISCORD_OAUTH_ID"),
@@ -38,13 +37,12 @@ func (s *APIServer) handleDiscordLogin(w http.ResponseWriter, r *http.Request) e
 		Scopes:      []string{"identify", "email"},
 	}
 
-	url := oauth2Config.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	url := oauth2Config.AuthCodeURL(os.Getenv("STATE"), oauth2.AccessTypeOffline)
 	http.Redirect(w, r, url, http.StatusFound)
 
 	return nil
 }
 
-// Route for discord callback
 func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request) error {
 	oauth2Config := &oauth2.Config{
 		ClientID:     os.Getenv("DISCORD_OAUTH_ID"),
@@ -52,6 +50,12 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 		RedirectURL:  os.Getenv("DISCORD_OAUTH_REDIRECT"),
 		Endpoint:     discordEndpoint,
 		Scopes:       []string{"identify"},
+	}
+
+	// Check if state is valid for CSRF
+	state := r.URL.Query().Get("state")
+	if state != os.Getenv("STATE") {
+		return fmt.Errorf("invalid state")
 	}
 
 	code := r.URL.Query().Get("code")
