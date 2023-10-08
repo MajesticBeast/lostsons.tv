@@ -49,7 +49,7 @@ func (s *APIServer) handleDeleteUser(w http.ResponseWriter, r *http.Request) err
 	}
 
 	// Check if user exists
-	if _, err := s.store.GetUserByUsername(user.ID); err != nil {
+	if _, err := s.store.GetUserByUsername(user.Username); err != nil {
 		return fmt.Errorf("user does not exist")
 	}
 
