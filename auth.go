@@ -9,8 +9,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
-
-	// "github.com/ravener/discord-oauth2"
 	"golang.org/x/oauth2"
 )
 
@@ -128,7 +126,7 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 
 }
 
-// function to authenticate jwt and cookie
+// // function to authenticate jwt and cookie
 // func (s *APIServer) authenticateJWT(next http.Handler) http.Handler {
 // 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 // 		// Get JWT from cookie
@@ -141,6 +139,11 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 
 // 		// Parse JWT
 // 		token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
+// 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok { // Check if signing method is HMAC
+// 				err = fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+// 				http.Error(w, err.Error(), http.StatusUnauthorized)
+// 				return nil, err
+// 			}
 // 			return []byte(os.Getenv("JWT_SECRET_KEY")), nil
 // 		})
 // 		if err != nil {
@@ -150,8 +153,16 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 // 		}
 
 // 		// Check if token is valid
-// 		if !token.Valid {
-// 			err = fmt.Errorf("token is invalid")
+// 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+// 			// Set claims in context
+// 			ctx := r.Context()
+// 			ctx = context.WithValue(ctx, "claims", claims)
+// 			r = r.WithContext(ctx)
+
+// 			// Call next handler
+// 			next.ServeHTTP(w, r)
+// 		} else {
+// 			err = fmt.Errorf("invalid jwt")
 // 			http.Error(w, err.Error(), http.StatusUnauthorized)
 // 			return
 // 		}
