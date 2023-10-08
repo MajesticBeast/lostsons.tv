@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -45,12 +46,13 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 		ClientSecret: os.Getenv("DISCORD_OAUTH_SECRET"),
 		RedirectURL:  os.Getenv("DISCORD_OAUTH_REDIRECT"),
 		Endpoint:     oauth2.Endpoint{TokenURL: os.Getenv("DISCORD_OAUTH_ENDPOINT")},
-		Scopes:       []string{"identify", "email"},
+		Scopes:       []string{"identify"},
 	}
 
 	code := r.URL.Query().Get("code")
 	token, err := oauth2Config.Exchange(r.Context(), code)
 	if err != nil {
+		err = fmt.Errorf("error exchanging code for token: %w", err)
 		return err
 	}
 
@@ -63,6 +65,7 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 		// Sign the JWT with the secret
 		jwtString, err := jwtToken.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
 		if err != nil {
+			err = fmt.Errorf("error signing JWT: %w", err)
 			return err
 		}
 
@@ -76,6 +79,7 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 			SameSite: http.SameSiteStrictMode,
 		})
 	} else {
+		err = fmt.Errorf("token is invalid")
 		return err
 	}
 
