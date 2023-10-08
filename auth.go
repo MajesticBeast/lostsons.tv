@@ -9,7 +9,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
-	"github.com/ravener/discord-oauth2"
+
+	// "github.com/ravener/discord-oauth2"
 	"golang.org/x/oauth2"
 )
 
@@ -36,7 +37,7 @@ func (s *APIServer) handleDiscordLogin(w http.ResponseWriter, r *http.Request) e
 		ClientID:    os.Getenv("DISCORD_OAUTH_ID"),
 		RedirectURL: os.Getenv("DISCORD_OAUTH_REDIRECT"),
 		Endpoint:    discordEndpoint,
-		Scopes:      []string{discord.ScopeIdentify},
+		Scopes:      []string{"identify", "email"},
 	}
 
 	url := oauth2Config.AuthCodeURL(os.Getenv("STATE"), oauth2.AccessTypeOffline)
