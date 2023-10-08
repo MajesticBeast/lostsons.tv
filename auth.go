@@ -18,7 +18,7 @@ func init() {
 func (s *APIServer) authRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/discord", makeHTTPHandleFunc(s.handleDiscordLogin))
-	r.Get("/discord/callback", makeHTTPHandleFunc(s.handleDiscordCallback))
+	r.Post("/discord/callback", makeHTTPHandleFunc(s.handleDiscordCallback))
 
 	return r
 }

@@ -99,7 +99,7 @@ func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) error {
 		log.Fatal(err)
 	}
 
-	return responseWithJSON(w, http.StatusOK, map[string]string{"message": "hello world"})
+	return nil
 }
 
 func (s *APIServer) handleHealthDB(w http.ResponseWriter, r *http.Request) error {
