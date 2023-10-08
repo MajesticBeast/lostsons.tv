@@ -90,7 +90,7 @@ func (s *APIServer) Run() {
 // Routes
 
 func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) error {
-	t, err := template.ParseFiles("./templates/index.html")
+	t, err := template.ParseFiles("./templates/login.html")
 	if err != nil {
 		log.Fatal(err)
 	}
