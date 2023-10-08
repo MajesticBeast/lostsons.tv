@@ -104,7 +104,7 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 	})
 
 	// Sign the JWT with the secret
-	jwtString, err := jwtToken.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
+	jwtString, err := jwtToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
 		err = fmt.Errorf("error signing JWT: %w", err)
 		return err
@@ -144,7 +144,7 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 // 				http.Error(w, err.Error(), http.StatusUnauthorized)
 // 				return nil, err
 // 			}
-// 			return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+// 			return []byte(os.Getenv("JWT_SECRET")), nil
 // 		})
 // 		if err != nil {
 // 			err = fmt.Errorf("error parsing jwt: %w", err)
