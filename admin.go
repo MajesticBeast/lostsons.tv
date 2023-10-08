@@ -10,6 +10,7 @@ import (
 
 func (s *APIServer) adminRouter() chi.Router {
 	r := chi.NewRouter()
+
 	r.Get("/", s.handleAdminIndex)
 	r.Get("/games", s.handleAdminGames)
 	r.Get("/users", s.handleAdminUsers)

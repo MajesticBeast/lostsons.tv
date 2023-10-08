@@ -62,11 +62,11 @@ func (s *APIServer) Run() {
 	// Mux webhook route
 	r.Post("/mux-webhook", makeHTTPHandleFunc(s.handleMuxWebhook))
 
-	/*
-	 * Mount subrouters
-	 */
+	/********************
+	 * Mount subrouters *
+	 ********************/
 
-	// Protected routes
+	// Protected subroutes
 	r.Group(func(r chi.Router) {
 		// Seek, verify, and validate JWT tokens
 		r.Use(jwtauth.Verifier(tokenAuth))
@@ -74,9 +74,7 @@ func (s *APIServer) Run() {
 		r.Mount("/admin", s.adminRouter())
 	})
 
-	// IN THE MIDDLE OF ADDING AUTHENTICATION. DOES AUTH ROUTES WORK INSIDE PROTECTED ROUTES?
-
-	// Unprotected routes
+	// Unprotected subroutes (they may have their own protected routes)
 	r.Mount("/clips", s.clipsRouter())
 	r.Mount("/users", s.usersRouter())
 	r.Mount("/games", s.gamesRouter())
