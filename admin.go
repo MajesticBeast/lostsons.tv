@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth"
 )
 
 func (s *APIServer) adminRouter() chi.Router {
@@ -20,22 +21,27 @@ func (s *APIServer) adminRouter() chi.Router {
 }
 
 // Admin Handlers
-//
-// --> /index
 func (s *APIServer) handleAdminIndex(w http.ResponseWriter, r *http.Request) {
+	_, claims, _ := jwtauth.FromContext(r.Context())
+	log.Println(claims)
+
+	// Create user struct
+	user := User{
+		Username: claims["username"].(string),
+		Email:    claims["email"].(string),
+	}
+
 	t, err := template.ParseFiles("./templates/admin/index.html")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := t.Execute(w, nil); err != nil {
+	if err := t.Execute(w, user); err != nil {
 		log.Fatal(err)
 	}
 }
 
 // List of games
-//
-// --> /games
 func (s *APIServer) handleAdminGames(w http.ResponseWriter, r *http.Request) {
 	games, err := s.store.GetAllGames()
 	if err != nil {
@@ -53,8 +59,6 @@ func (s *APIServer) handleAdminGames(w http.ResponseWriter, r *http.Request) {
 }
 
 // List of users
-//
-// --> /users
 func (s *APIServer) handleAdminUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := s.store.GetAllUsers()
 	if err != nil {
@@ -72,8 +76,6 @@ func (s *APIServer) handleAdminUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 // List of clips
-//
-// --> /clips
 func (s *APIServer) handleAdminClips(w http.ResponseWriter, r *http.Request) {
 	clips, err := s.store.GetAllClips()
 	if err != nil {

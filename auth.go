@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -8,11 +9,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
+	"github.com/ravener/discord-oauth2"
 	"golang.org/x/oauth2"
 )
 
 var discordEndpoint = oauth2.Endpoint{
-	AuthURL:  "https://discord.com/api/oauth2/authorize",
+	AuthURL:  "https://discord.com/api/oauth2/authorize?client_id=1083877630912249927&redirect_uri=https%3A%2F%2Flostsons.tv%2Fauth%2Fdiscord%2Fcallback&response_type=code&scope=identify%20email",
 	TokenURL: "https://discord.com/api/oauth2/token",
 }
 
@@ -34,7 +36,7 @@ func (s *APIServer) handleDiscordLogin(w http.ResponseWriter, r *http.Request) e
 		ClientID:    os.Getenv("DISCORD_OAUTH_ID"),
 		RedirectURL: os.Getenv("DISCORD_OAUTH_REDIRECT"),
 		Endpoint:    discordEndpoint,
-		Scopes:      []string{"identify", "email"},
+		Scopes:      []string{discord.ScopeIdentify},
 	}
 
 	url := oauth2Config.AuthCodeURL(os.Getenv("STATE"), oauth2.AccessTypeOffline)
@@ -44,18 +46,18 @@ func (s *APIServer) handleDiscordLogin(w http.ResponseWriter, r *http.Request) e
 }
 
 func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request) error {
+	// Check if state is valid #CSRF
+	state := r.URL.Query().Get("state")
+	if state != os.Getenv("STATE") {
+		return fmt.Errorf("invalid state")
+	}
+
 	oauth2Config := &oauth2.Config{
 		ClientID:     os.Getenv("DISCORD_OAUTH_ID"),
 		ClientSecret: os.Getenv("DISCORD_OAUTH_SECRET"),
 		RedirectURL:  os.Getenv("DISCORD_OAUTH_REDIRECT"),
 		Endpoint:     discordEndpoint,
 		Scopes:       []string{"identify"},
-	}
-
-	// Check if state is valid for CSRF
-	state := r.URL.Query().Get("state")
-	if state != os.Getenv("STATE") {
-		return fmt.Errorf("invalid state")
 	}
 
 	code := r.URL.Query().Get("code")
@@ -65,35 +67,94 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 		return err
 	}
 
-	if token.Valid() {
-		// Create a JWT with the access token as the claim
-		jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"access_token": token.AccessToken,
-		})
-
-		// Sign the JWT with the secret
-		jwtString, err := jwtToken.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
-		if err != nil {
-			err = fmt.Errorf("error signing JWT: %w", err)
-			return err
-		}
-
-		// Create and set the JWT as a secure cookie
-		http.SetCookie(w, &http.Cookie{
-			Name:     "jwt",
-			Value:    jwtString,
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   true,
-			SameSite: http.SameSiteStrictMode,
-		})
-	} else {
-		err = fmt.Errorf("token is invalid")
+	// Get users Discord info
+	req, err := http.NewRequest("GET", "https://discord.com/api/users/@me", nil)
+	if err != nil {
+		err = fmt.Errorf("error creating request to Discord API: %w", err)
 		return err
 	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.AccessToken))
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		err = fmt.Errorf("error getting response from Discord API: %w", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Create user struct for later use
+	user := User{}
+	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
+		err = fmt.Errorf("error decoding response body: %w", err)
+		return err
+	}
+
+	// If user doesn't exist, enter into DB, then continue as normal
+	if _, err := s.store.GetUserByUsername(user.Username); err != nil {
+		if err := s.store.CreateUser(user); err != nil {
+			err = fmt.Errorf("error creating user: %w", err)
+			return err
+		}
+	}
+
+	// Create a JWT with the access token as the claim
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"access_token": token.AccessToken,
+		"username":     user.Username,
+		"email":        user.Email,
+	})
+
+	// Sign the JWT with the secret
+	jwtString, err := jwtToken.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
+	if err != nil {
+		err = fmt.Errorf("error signing JWT: %w", err)
+		return err
+	}
+
+	// Create and set the JWT as a secure cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "jwt",
+		Value:    jwtString,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
 
 	http.Redirect(w, r, "/", http.StatusFound)
 
 	return nil
 
 }
+
+// function to authenticate jwt and cookie
+// func (s *APIServer) authenticateJWT(next http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		// Get JWT from cookie
+// 		cookie, err := r.Cookie("jwt")
+// 		if err != nil {
+// 			err = fmt.Errorf("error getting jwt cookie: %w", err)
+// 			http.Error(w, err.Error(), http.StatusUnauthorized)
+// 			return
+// 		}
+
+// 		// Parse JWT
+// 		token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
+// 			return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+// 		})
+// 		if err != nil {
+// 			err = fmt.Errorf("error parsing jwt: %w", err)
+// 			http.Error(w, err.Error(), http.StatusUnauthorized)
+// 			return
+// 		}
+
+// 		// Check if token is valid
+// 		if !token.Valid {
+// 			err = fmt.Errorf("token is invalid")
+// 			http.Error(w, err.Error(), http.StatusUnauthorized)
+// 			return
+// 		}
+
+// 		next.ServeHTTP(w, r)
+// 	})
+// }

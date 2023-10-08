@@ -10,9 +10,17 @@ import (
 )
 
 type Storage interface {
+	IsAlive() bool
 	CreateClip(Clip) error
 	GetClip(string) (Clip, error)
 	GetAllClips() ([]Clip, error)
+	CreateUser(User) error
+	GetAllUsers() ([]User, error)
+	GetUserByUsername(string) (User, error)
+	GetUserByEmail(string) (User, error)
+	CreateGame(Game) error
+	GetAllGames() ([]Game, error)
+	GetGameByName(string) (Game, error)
 }
 
 type PostgresStore struct {
@@ -27,6 +35,11 @@ func NewPostgresStore(dbConnStr string) (*PostgresStore, error) {
 	}
 
 	return &PostgresStore{db: db}, nil
+}
+
+func (s *PostgresStore) IsAlive() bool {
+	err := s.db.Ping(context.Background())
+	return err == nil
 }
 
 /*

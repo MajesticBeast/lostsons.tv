@@ -23,12 +23,8 @@ import (
 
 var tokenAuth *jwtauth.JWTAuth
 
-func init() {
-	tokenAuth = jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
-}
-
 type APIServer struct {
-	store *PostgresStore
+	store Storage
 	log   logger.Logger
 }
 
@@ -38,7 +34,7 @@ type ApiError struct {
 	Error string `json:"error"`
 }
 
-func NewAPIServer(store *PostgresStore, log logger.Logger) *APIServer {
+func NewAPIServer(store Storage, log logger.Logger) *APIServer {
 	return &APIServer{
 		store: store,
 		log:   log,
@@ -54,6 +50,7 @@ func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
 }
 
 func (s *APIServer) Run() {
+	tokenAuth = jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
 
 	// Initialize main router and routes
 	r := chi.NewRouter()
@@ -88,7 +85,6 @@ func (s *APIServer) Run() {
 }
 
 // Routes
-
 func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) error {
 	t, err := template.ParseFiles("./templates/login.html")
 	if err != nil {
@@ -103,8 +99,8 @@ func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *APIServer) handleHealthDB(w http.ResponseWriter, r *http.Request) error {
-	err := s.store.db.Ping(r.Context())
-	if err != nil {
+	// Check if db is alive
+	if !s.store.IsAlive() {
 		return responseWithError(w, http.StatusInternalServerError, "dead")
 	}
 	return responseWithJSON(w, http.StatusOK, map[string]string{"db": "alive"})

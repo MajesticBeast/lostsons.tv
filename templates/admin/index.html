@@ -4,10 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel</title>
+    <title>LostSons.tv</title>
 </head>
 
 <body>
+    <h2>Welcome {{ .Username }}</h2>
+    <h3>{{ .Email }}</h3>
     <h3>
         <a href="/admin/clips">Clips</a> | <a href="/admin/users">Users</a> | <a href="/admin/games">Games</a>
     </h3>
