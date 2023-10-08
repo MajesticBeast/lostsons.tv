@@ -28,6 +28,12 @@
     User ID: {{ .ID }}<br />
     Username: {{ .Username }}<br />
     Email: {{ .Email }}<br />
+    <form action="/users/delete" method="post">
+        <input type="hidden" name="id" value="{{ .ID }}">
+        <input type="hidden" name="username" value="{{ .Username }}">
+        <input type="hidden" name="email" value="{{ .Email }}">
+        <input type="submit" value="Delete">
+    </form>
     {{ end }}
 
 </body>

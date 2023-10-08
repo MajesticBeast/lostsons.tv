@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt"
@@ -101,6 +102,7 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 		"access_token": token.AccessToken,
 		"username":     user.Username,
 		"email":        user.Email,
+		"exp":          time.Now().Add(time.Hour * 24 * 7).Unix(),
 	})
 
 	// Sign the JWT with the secret

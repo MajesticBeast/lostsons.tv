@@ -51,9 +51,6 @@ func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
 
 func (s *APIServer) Run() {
 	tokenAuth = jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
-	// DEBUG
-	_, tokenString, _ := tokenAuth.Encode(map[string]interface{}{"user_id": 123})
-	fmt.Printf("DEBUG: a sample jwt is %s\n\n", tokenString)
 
 	// Initialize main router and routes
 	r := chi.NewRouter()
@@ -89,7 +86,7 @@ func (s *APIServer) Run() {
 
 // Routes
 func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) error {
-	t, err := template.ParseFiles("./templates/login.html")
+	t, err := template.ParseFiles("./templates/index.html")
 	if err != nil {
 		log.Fatal(err)
 	}

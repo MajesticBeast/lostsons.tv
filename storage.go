@@ -15,6 +15,7 @@ type Storage interface {
 	GetClip(string) (Clip, error)
 	GetAllClips() ([]Clip, error)
 	CreateUser(User) error
+	DeleteUser(User) error
 	GetAllUsers() ([]User, error)
 	GetUserByUsername(string) (User, error)
 	GetUserByEmail(string) (User, error)
@@ -339,6 +340,18 @@ func (s *PostgresStore) CreateUser(user User) error {
 
 	if err != nil {
 		err = fmt.Errorf("error inserting user: %w", err)
+		return err
+	}
+
+	return nil
+}
+
+// Delete a user from database
+func (s *PostgresStore) DeleteUser(user User) error {
+	query := `DELETE FROM users WHERE id = $1`
+	_, err := s.db.Exec(context.Background(), query, user.ID)
+	if err != nil {
+		err = fmt.Errorf("error deleting user: %w", err)
 		return err
 	}
 

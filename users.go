@@ -11,6 +11,7 @@ import (
 func (s *APIServer) usersRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/new", makeHTTPHandleFunc(s.handleCreateUser))
+	r.Post("/delete", makeHTTPHandleFunc(s.handleDeleteUser))
 
 	return r
 }
@@ -34,6 +35,27 @@ func (s *APIServer) handleCreateUser(w http.ResponseWriter, r *http.Request) err
 	// Create user
 	if err := s.store.CreateUser(user); err != nil {
 		return fmt.Errorf("error creating user: %w", err)
+	}
+
+	return responseWithJSON(w, http.StatusOK, "success")
+}
+
+// Route for deleting a user
+func (s *APIServer) handleDeleteUser(w http.ResponseWriter, r *http.Request) error {
+	user := User{
+		ID:       r.PostFormValue("id"),
+		Username: r.PostFormValue("username"),
+		Email:    r.PostFormValue("email"),
+	}
+
+	// Check if user exists
+	if _, err := s.store.GetUserByUsername(user.ID); err != nil {
+		return fmt.Errorf("user does not exist")
+	}
+
+	// Delete user
+	if err := s.store.DeleteUser(user); err != nil {
+		return fmt.Errorf("error deleting user: %w", err)
 	}
 
 	return responseWithJSON(w, http.StatusOK, "success")
