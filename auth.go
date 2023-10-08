@@ -11,6 +11,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+var discordEndpoint = oauth2.Endpoint{
+	AuthURL:  "https://discord.com/api/oauth2/authorize",
+	TokenURL: "https://discord.com/api/oauth2/token",
+}
+
 // init function to load env vars
 func init() {
 	godotenv.Load()
@@ -29,7 +34,7 @@ func (s *APIServer) handleDiscordLogin(w http.ResponseWriter, r *http.Request) e
 	oauth2Config := &oauth2.Config{
 		ClientID:    os.Getenv("DISCORD_OAUTH_ID"),
 		RedirectURL: os.Getenv("DISCORD_OAUTH_REDIRECT"),
-		Endpoint:    oauth2.Endpoint{AuthURL: os.Getenv("DISCORD_OAUTH_ENDPOINT")},
+		Endpoint:    discordEndpoint,
 		Scopes:      []string{"identify", "email"},
 	}
 
@@ -45,7 +50,7 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 		ClientID:     os.Getenv("DISCORD_OAUTH_ID"),
 		ClientSecret: os.Getenv("DISCORD_OAUTH_SECRET"),
 		RedirectURL:  os.Getenv("DISCORD_OAUTH_REDIRECT"),
-		Endpoint:     oauth2.Endpoint{TokenURL: os.Getenv("DISCORD_OAUTH_ENDPOINT")},
+		Endpoint:     discordEndpoint,
 		Scopes:       []string{"identify"},
 	}
 
