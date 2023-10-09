@@ -188,7 +188,7 @@ func IsValidMuxSignature(r *http.Request, body []byte) error {
 	timestamp := timestampArr[1]
 	v1Signature := v1SignatureArr[1]
 
-	webhookSecret := os.Getenv("DISCORD_WEBHOOK_SECRET")
+	webhookSecret := os.Getenv("MUX_WEBHOOK_SECRET")
 	payload := fmt.Sprintf("%s.%s", timestamp, string(body))
 	sha := generateHmacSignature(webhookSecret, payload)
 
