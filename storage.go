@@ -11,8 +11,8 @@ import (
 
 type Storage interface {
 	IsAlive() bool
-	UpdateClipToDeleted(string) error
-	UpdateClipIDToDeleted(string) error
+	UpdateClipsUserIDToDeleted(string) error
+	UpdateClipsUsersUserIDToDeleted(string) error
 	CreateClip(Clip) error
 	GetClip(string) (Clip, error)
 	GetAllClips() ([]Clip, error)
@@ -169,7 +169,7 @@ func (s *PostgresStore) createClipsUsersTable() error {
  *
  */
 
-func (s *PostgresStore) UpdateClipToDeleted(id string) error {
+func (s *PostgresStore) UpdateClipsUserIDToDeleted(id string) error {
 	updateQuery := `UPDATE clips SET user_id = '00000000-0000-0000-0000-000000000000' WHERE user_id = $1`
 	_, err := s.db.Exec(context.Background(), updateQuery, id)
 	if err != nil {
@@ -181,7 +181,7 @@ func (s *PostgresStore) UpdateClipToDeleted(id string) error {
 }
 
 // Create function that sets the user_id to 0000-0000-0000-0000-0000 in clips_users table if the user is deleted
-func (s *PostgresStore) UpsetClipIDToDeleted(id string) error {
+func (s *PostgresStore) UpdateClipsUsersUserIDToDeleted(id string) error {
 	updateQuery := `UPDATE clips_users SET user_id = '00000000-0000-0000-0000-000000000000' WHERE clip_id = $1`
 	_, err := s.db.Exec(context.Background(), updateQuery, id)
 	if err != nil {

@@ -54,8 +54,12 @@ func (s *APIServer) handleDeleteUser(w http.ResponseWriter, r *http.Request) err
 	}
 
 	// Need to delete foreign key references first
-	if err := s.store.UpdateClipToDeleted(user.ID); err != nil {
-		return fmt.Errorf("error updating clips_user_id to 0000: %w", err)
+	if err := s.store.UpdateClipsUserIDToDeleted(user.ID); err != nil {
+		return fmt.Errorf("error updating clips.user_id to 0000: %w", err)
+	}
+
+	if err := s.store.UpdateClipsUsersUserIDToDeleted(user.ID); err != nil {
+		return fmt.Errorf("error updating clips_users.user_id to 0000: %w", err)
 	}
 
 	// Delete user
