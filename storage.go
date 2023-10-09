@@ -436,7 +436,7 @@ func (s *PostgresStore) GetAllUsers() ([]User, error) {
 
 	for rows.Next() {
 		user := new(User)
-		if err := rows.Scan(&user.ID, &user.Username, &user.Email); err != nil {
+		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Role); err != nil {
 			err = fmt.Errorf("error scanning rows: %w", err)
 			return nil, err
 		}

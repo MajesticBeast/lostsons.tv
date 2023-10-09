@@ -102,6 +102,7 @@ func (s *APIServer) handleDiscordCallback(w http.ResponseWriter, r *http.Request
 		"access_token": token.AccessToken,
 		"username":     user.Username,
 		"email":        user.Email,
+		"role":         user.Role,
 		"exp":          time.Now().Add(time.Hour * 24 * 7).Unix(),
 	})
 
