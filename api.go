@@ -116,6 +116,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) err
 		err = fmt.Errorf("error reading mux webhook response body: %w", err)
 		return responseWithError(w, http.StatusBadRequest, err.Error())
 	}
+	fmt.Printf("Printing webhook body %s", body)
 
 	err = IsValidMuxSignature(r, body)
 	if err != nil {
