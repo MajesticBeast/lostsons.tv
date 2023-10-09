@@ -99,7 +99,6 @@ func (s *APIServer) handleIndex(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *APIServer) handleHealthDB(w http.ResponseWriter, r *http.Request) error {
-	// Check if db is alive
 	if !s.store.IsAlive() {
 		return responseWithError(w, http.StatusInternalServerError, "dead")
 	}

@@ -19,6 +19,7 @@ import (
 func (s *APIServer) clipsRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/new", makeHTTPHandleFunc(s.handleCreateClip))
+	r.Post("/delete", makeHTTPHandleFunc(s.handleDeleteClip))
 
 	return r
 }
@@ -89,6 +90,41 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 	if err != nil {
 		err = fmt.Errorf("error creating clip: %w", err)
 		return err
+	}
+
+	return responseWithJSON(w, http.StatusOK, "success")
+}
+
+// Route for deleting a clip
+func (s *APIServer) handleDeleteClip(w http.ResponseWriter, r *http.Request) error {
+	clipID := r.PostFormValue("id")
+	clip := Clip{}
+
+	// Get the clip data from the database
+	clip, err := s.store.GetClip(clipID)
+	if err != nil {
+		return fmt.Errorf("clip does not exist")
+	}
+
+	// Delete clip from Mux
+	client := mux.NewMuxClient()
+	if err := mux.DeleteAsset(client, clip.AssetID); err != nil {
+		return fmt.Errorf("error deleting mux asset: %w", err)
+	}
+
+	// Delete clip_id from clips_users
+	if err := s.store.DeleteClipsUsersClipID(clipID); err != nil {
+		return fmt.Errorf("error deleting clip_id from clips_users: %w", err)
+	}
+
+	// Delete clip_id from clips_tags
+	if err := s.store.DeleteClipsTagsClipID(clipID); err != nil {
+		return fmt.Errorf("error deleting clip_id from clips_tags: %w", err)
+	}
+
+	// Delete clip
+	if err := s.store.DeleteClip(clip.ID); err != nil {
+		return fmt.Errorf("error deleting clip: %w", err)
 	}
 
 	return responseWithJSON(w, http.StatusOK, "success")

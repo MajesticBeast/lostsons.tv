@@ -46,21 +46,15 @@ func CreateAsset(client *muxgo.APIClient, filename string) (muxgo.AssetResponse,
 	return asset, nil
 }
 
-// func CreateAsset(client *muxgo.APIClient, url string) (muxgo.AssetResponse, error) {
-// 	asset, err := client.AssetsApi.CreateAsset(muxgo.CreateAssetRequest{
-// 		Input: []muxgo.InputSettings{
-// 			muxgo.InputSettings{
-// 				Url: url,
-// 			},
-// 		},
-// 		PlaybackPolicy: []muxgo.PlaybackPolicy{
-// 			"public",
-// 		},
-// 		Mp4Support: "standard",
-// 	})
+// Delete a Mux asset
+func DeleteAsset(client *muxgo.APIClient, assetID string) error {
+	err := client.AssetsApi.DeleteAsset(assetID)
+	if err != nil {
+		return err
+	}
 
-// 	return asset, err
-// }
+	return nil
+}
 
 func ReceiveVideoStatus(w http.ResponseWriter, r *http.Request) {
 

@@ -13,6 +13,9 @@ type Storage interface {
 	IsAlive() bool
 	UpdateClipsUserIDToDeleted(string) error
 	UpdateClipsUsersUserIDToDeleted(string) error
+	DeleteClip(string) error
+	DeleteClipsUsersClipID(string) error
+	DeleteClipsTagsClipID(string) error
 	CreateClip(Clip) error
 	GetClip(string) (Clip, error)
 	GetAllClips() ([]Clip, error)
@@ -169,6 +172,42 @@ func (s *PostgresStore) createClipsUsersTable() error {
  *
  */
 
+// Function to delete a clip by id
+func (s *PostgresStore) DeleteClip(id string) error {
+	query := `DELETE FROM clips WHERE id = $1`
+	_, err := s.db.Exec(context.Background(), query, id)
+	if err != nil {
+		err = fmt.Errorf("error deleting clip: %w", err)
+		return err
+	}
+
+	return nil
+}
+
+// Function to delete clips from clips_users table
+func (s *PostgresStore) DeleteClipsUsersClipID(id string) error {
+	query := `DELETE FROM clips_users WHERE clip_id = $1`
+	_, err := s.db.Exec(context.Background(), query, id)
+	if err != nil {
+		err = fmt.Errorf("error deleting clips_users: %w", err)
+		return err
+	}
+
+	return nil
+}
+
+// Function to delete clips from clips_tags table
+func (s *PostgresStore) DeleteClipsTagsClipID(id string) error {
+	query := `DELETE FROM clips_tags WHERE clip_id = $1`
+	_, err := s.db.Exec(context.Background(), query, id)
+	if err != nil {
+		err = fmt.Errorf("error deleting clips_tags: %w", err)
+		return err
+	}
+
+	return nil
+}
+
 func (s *PostgresStore) UpdateClipsUserIDToDeleted(id string) error {
 	updateQuery := `UPDATE clips SET user_id = '00000000-0000-0000-0000-000000000000' WHERE user_id = $1`
 	_, err := s.db.Exec(context.Background(), updateQuery, id)
@@ -180,7 +219,6 @@ func (s *PostgresStore) UpdateClipsUserIDToDeleted(id string) error {
 	return nil
 }
 
-// Create function that sets the user_id to 0000-0000-0000-0000-0000 in clips_users table if the user is deleted
 func (s *PostgresStore) UpdateClipsUsersUserIDToDeleted(id string) error {
 	updateQuery := `UPDATE clips_users SET user_id = '00000000-0000-0000-0000-000000000000' WHERE user_id = $1`
 	_, err := s.db.Exec(context.Background(), updateQuery, id)

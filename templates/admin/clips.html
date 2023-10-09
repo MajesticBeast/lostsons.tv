@@ -44,6 +44,10 @@
     Game name: {{ .GameID }}<br />
     Tags: {{ .Tags }}<br />
     Featured players: {{ .FeaturedUsers }}<br />
+    <form action="/clips/delete" method="post">
+        <input type="hidden" name="id" value="{{ .ID }}">
+        <input type="submit" value="Delete">
+    </form>
     {{ end }}
 
 </body>
