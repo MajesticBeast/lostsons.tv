@@ -131,6 +131,7 @@ func (s *APIServer) handleMuxWebhook(w http.ResponseWriter, r *http.Request) err
 
 	err = PostToDiscordWebhook(assetResponse)
 	if err != nil {
+		s.log.Warn(err.Error())
 		return responseWithError(w, http.StatusInternalServerError, err.Error())
 	}
 

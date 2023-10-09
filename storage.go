@@ -135,7 +135,8 @@ func (s *PostgresStore) createUsersTable() error {
 	query := `CREATE TABLE IF NOT EXISTS users (
 		id varchar(128) UNIQUE NOT NULL,
 		username varchar(35) UNIQUE NOT NULL,
-		email varchar(60) UNIQUE NOT NULL
+		email varchar(60) UNIQUE NOT NULL,
+		role varchar(10) DEFAULT 'user',
 	)`
 
 	_, err := s.db.Exec(context.Background(), query)

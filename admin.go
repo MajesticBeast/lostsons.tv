@@ -23,7 +23,6 @@ func (s *APIServer) adminRouter() chi.Router {
 // Admin Handlers
 func (s *APIServer) handleAdminIndex(w http.ResponseWriter, r *http.Request) {
 	_, claims, _ := jwtauth.FromContext(r.Context())
-	log.Println(claims)
 
 	// Create user struct
 	user := User{

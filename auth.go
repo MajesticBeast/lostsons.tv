@@ -18,7 +18,7 @@ var discordEndpoint = oauth2.Endpoint{
 	TokenURL: "https://discord.com/api/oauth2/token",
 }
 
-// init function to load env vars
+// init to load env vars
 func init() {
 	godotenv.Load()
 }
