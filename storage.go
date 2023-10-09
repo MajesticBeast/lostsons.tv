@@ -182,7 +182,7 @@ func (s *PostgresStore) UpdateClipsUserIDToDeleted(id string) error {
 
 // Create function that sets the user_id to 0000-0000-0000-0000-0000 in clips_users table if the user is deleted
 func (s *PostgresStore) UpdateClipsUsersUserIDToDeleted(id string) error {
-	updateQuery := `UPDATE clips_users SET user_id = '00000000-0000-0000-0000-000000000000' WHERE clip_id = $1`
+	updateQuery := `UPDATE clips_users SET user_id = '00000000-0000-0000-0000-000000000000' WHERE user_id = $1`
 	_, err := s.db.Exec(context.Background(), updateQuery, id)
 	if err != nil {
 		err = fmt.Errorf("error updating clips_user_id to 0000: %w", err)
