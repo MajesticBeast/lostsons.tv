@@ -14,12 +14,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth"
 )
 
 func (s *APIServer) clipsRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/new", makeHTTPHandleFunc(s.handleCreateClip))
-	r.Post("/delete", makeHTTPHandleFunc(s.handleDeleteClip))
+
+	// Protected routes
+	r.Group(func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator)
+		r.Post("/delete", makeHTTPHandleFunc(s.handleDeleteClip))
+	})
 
 	return r
 }

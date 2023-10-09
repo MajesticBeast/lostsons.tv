@@ -6,12 +6,19 @@ import (
 
 	ev "github.com/AfterShip/email-verifier"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth"
 )
 
 func (s *APIServer) usersRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/new", makeHTTPHandleFunc(s.handleCreateUser))
-	r.Post("/delete", makeHTTPHandleFunc(s.handleDeleteUser))
+
+	// Protected routes
+	r.Group(func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator)
+		r.Post("/delete", makeHTTPHandleFunc(s.handleDeleteUser))
+	})
 
 	return r
 }

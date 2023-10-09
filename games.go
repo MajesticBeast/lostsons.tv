@@ -5,11 +5,18 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth"
 )
 
 func (s *APIServer) gamesRouter() chi.Router {
 	r := chi.NewRouter()
-	r.Post("/new", makeHTTPHandleFunc(s.handleCreateGame))
+
+	// Protected routes
+	r.Group(func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator)
+		r.Post("/new", makeHTTPHandleFunc(s.handleCreateGame))
+	})
 
 	return r
 }
