@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"mime/multipart"
 	"net/http"
@@ -51,12 +50,12 @@ func (s *APIServer) handleGetClips(w http.ResponseWriter, r *http.Request) error
 	}
 
 	// marshal clips into json
-	clipsJSON, err := json.Marshal(clips)
+	// clipsJSON, err := json.Marshal(clips)
 	if err != nil {
 		return fmt.Errorf("error marshaling clips into json: %w", err)
 	}
 
-	return responseWithJSON(w, http.StatusOK, clipsJSON)
+	return responseWithJSON(w, http.StatusOK, clips)
 }
 
 // Route for submitting a clip
