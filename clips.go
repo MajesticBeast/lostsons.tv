@@ -49,12 +49,6 @@ func (s *APIServer) handleGetClips(w http.ResponseWriter, r *http.Request) error
 		return fmt.Errorf("error getting all clips: %w", err)
 	}
 
-	// marshal clips into json
-	// clipsJSON, err := json.Marshal(clips)
-	if err != nil {
-		return fmt.Errorf("error marshaling clips into json: %w", err)
-	}
-
 	return responseWithJSON(w, http.StatusOK, clips)
 }
 
@@ -125,7 +119,7 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	return responseWithJSON(w, http.StatusOK, "success")
+	return responseWithJSON(w, http.StatusOK, "clip added")
 }
 
 // Route for deleting a clip
@@ -160,7 +154,7 @@ func (s *APIServer) handleDeleteClip(w http.ResponseWriter, r *http.Request) err
 		return fmt.Errorf("error deleting clip: %w", err)
 	}
 
-	return responseWithJSON(w, http.StatusOK, "success")
+	return responseWithJSON(w, http.StatusOK, "clip deleted")
 }
 
 func NewDigitalOceanSession() (*session.Session, error) {
