@@ -12,6 +12,7 @@ require (
 require (
 	github.com/AfterShip/email-verifier v1.3.3 // indirect
 	github.com/aws/aws-sdk-go v1.45.19 // indirect
+	github.com/go-chi/cors v1.2.1 // indirect
 	github.com/go-chi/jwtauth v1.2.0 // indirect
 	github.com/goccy/go-json v0.3.5 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect

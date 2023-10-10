@@ -12,7 +12,7 @@ func main() {
 	log := &logger.StdLogger{}
 
 	// Load environment variables
-	godotenv.Load()
+	godotenv.Load() // not likely needed with app platform env vars
 
 	// Initialize the database connection
 	dbConnStr := os.Getenv("DBCONNSTR")
