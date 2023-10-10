@@ -20,6 +20,7 @@ import (
 func (s *APIServer) clipsRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/new", makeHTTPHandleFunc(s.handleCreateClip))
+	r.Get("/", makeHTTPHandleFunc(s.handleGetClips))
 
 	// Protected routes
 	r.Group(func(r chi.Router) {
@@ -31,12 +32,21 @@ func (s *APIServer) clipsRouter() chi.Router {
 	return r
 }
 
+// Route for getting all clips
+func (s *APIServer) handleGetClips(w http.ResponseWriter, r *http.Request) error {
+	clips, err := s.store.GetAllClips()
+	if err != nil {
+		return fmt.Errorf("error getting all clips: %w", err)
+	}
+
+	return responseWithJSON(w, http.StatusOK, clips)
+}
+
 // Route for submitting a clip
 func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) error {
 	newForm := new(NewClipForm)
 	if err := r.ParseMultipartForm(45 << 20); err != nil {
-		err = fmt.Errorf("error parsing multipart form: %w", err)
-		return err
+		return fmt.Errorf("error parsing multipart form: %w", err)
 	}
 
 	newForm.Description = r.FormValue("description")
@@ -48,36 +58,31 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 	// Get file from form
 	file, handler, err := r.FormFile("clip")
 	if err != nil {
-		err = fmt.Errorf("error getting file from form: %w", err)
-		return err
+		return fmt.Errorf("error getting file from form: %w", err)
 	}
 	defer file.Close()
 
 	// Upload file to DigitalOcean Spaces
 	sess, err := NewDigitalOceanSession()
 	if err != nil {
-		err = fmt.Errorf("error creating new digital ocean session: %w", err)
-		return err
+		return fmt.Errorf("error creating new digital ocean session: %w", err)
 	}
 
 	svc, err := NewS3Client(sess)
 	if err != nil {
-		err = fmt.Errorf("error creating new s3 client: %w", err)
-		return err
+		return fmt.Errorf("error creating new s3 client: %w", err)
 	}
 
 	err = UploadFileToSpaces(svc, file, handler)
 	if err != nil {
-		err = fmt.Errorf("error uploading file to spaces: %w", err)
-		return err
+		return fmt.Errorf("error uploading file to spaces: %w", err)
 	}
 
 	// Create a new Mux client and asset
 	client := mux.NewMuxClient()
 	asset, err := mux.CreateAsset(client, handler.Filename)
 	if err != nil {
-		err = fmt.Errorf("error creating mux asset: %w", err)
-		return err
+		return fmt.Errorf("error creating mux asset: %w", err)
 	}
 
 	// Create a new clip object
@@ -96,6 +101,11 @@ func (s *APIServer) handleCreateClip(w http.ResponseWriter, r *http.Request) err
 	err = s.store.CreateClip(clip)
 	if err != nil {
 		err = fmt.Errorf("error creating clip: %w", err)
+
+		// Need to delete asset from Mux if we errored out inserting data into the database
+		if err_mux := mux.DeleteAsset(client, clip.AssetID); err != nil {
+			err = fmt.Errorf("error deleting failed mux asset and error inserting into db: %w // %w", err_mux, err)
+		}
 		return err
 	}
 
