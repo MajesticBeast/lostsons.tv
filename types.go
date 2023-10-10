@@ -5,17 +5,17 @@ import (
 )
 
 type Clip struct {
-	ID            string
-	PlaybackID    string
-	AssetID       string
-	DateUploaded  time.Time
-	Description   string
-	UserID        string
-	GameID        string
-	Tags          string
-	FeaturedUsers string
-	Game          string
-	Username      string
+	ID            string    `json:"id"`
+	PlaybackID    string    `json:"playback_id"`
+	AssetID       string    `json:"asset_id"`
+	DateUploaded  time.Time `json:"date_uploaded"`
+	Description   string    `json:"description"`
+	UserID        string    `json:"user_id"`
+	GameID        string    `json:"game_id"`
+	Tags          string    `json:"tags"`
+	FeaturedUsers string    `json:"featured_users"`
+	Game          string    `json:"game"`
+	Username      string    `json:"username"`
 }
 
 type NewClipForm struct {
