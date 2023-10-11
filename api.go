@@ -69,6 +69,7 @@ func (s *APIServer) Run() {
 	r.Group(func(r chi.Router) {
 		// Seek, verify, and validate JWT tokens
 		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator)
 		r.Use(s.isAdmin)
 		r.Mount("/admin", s.adminRouter())
 	})
