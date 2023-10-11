@@ -69,7 +69,7 @@ func (s *APIServer) Run() {
 	r.Group(func(r chi.Router) {
 		// Seek, verify, and validate JWT tokens
 		r.Use(jwtauth.Verifier(tokenAuth))
-		r.Use(jwtauth.Authenticator)
+		r.Use(s.isAdmin)
 		r.Mount("/admin", s.adminRouter())
 	})
 
@@ -208,4 +208,23 @@ func responseWithJSON(w http.ResponseWriter, code int, payload interface{}) erro
 
 func responseWithError(w http.ResponseWriter, code int, payload string) error {
 	return responseWithJSON(w, code, map[string]string{"error": payload})
+}
+
+// Middleware to check if user is admin
+func (s *APIServer) isAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, claims, err := jwtauth.FromContext(r.Context())
+		if err != nil {
+			err := responseWithError(w, http.StatusUnauthorized, "unauthorized")
+			s.log.Warn(err.Error())
+		}
+
+		role, ok := claims["role"].(string)
+		if !ok || role != "admin" {
+			responseWithError(w, http.StatusUnauthorized, "unauthorized")
+			s.log.Warn(err.Error())
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
